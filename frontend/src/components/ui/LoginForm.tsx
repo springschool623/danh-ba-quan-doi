@@ -44,6 +44,7 @@ export function LoginForm({
         const tokenCookie = cookies.find((cookie) =>
           cookie.trim().startsWith('token=')
         )
+
         if (tokenCookie) {
           console.log('Token in cookie:', tokenCookie.split('=')[1])
         } else {

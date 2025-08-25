@@ -10,6 +10,8 @@ import ranksRoutes from './routes/ranksRoute.js'
 import positionsRoutes from './routes/positionsRoute.js'
 import departmentsRoutes from './routes/departmentsRoute.js'
 import locationsRoutes from './routes/locationsRoute.js'
+import rolesRoutes from './routes/rolesRoute.js'
+import usersRoutes from './routes/usersRoute.js'
 
 dotenv.config() // load .env
 
@@ -31,7 +33,8 @@ app.use('/api/ranks', ranksRoutes)
 app.use('/api/positions', positionsRoutes)
 app.use('/api/departments', departmentsRoutes)
 app.use('/api/locations', locationsRoutes)
-
+app.use('/api/roles', rolesRoutes)
+app.use('/api/users', usersRoutes)
 app.get('/', (req, res) => {
   res.send(`Server running on port ${process.env.PORT}`)
 })

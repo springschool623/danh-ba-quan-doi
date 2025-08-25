@@ -5,6 +5,8 @@ import {
   getContactsByProvince,
   getContactsByWard,
   addContact,
+  updateContact,
+  deleteContact,
 } from '../controllers/contactsController.js'
 
 const router = express.Router()
@@ -14,5 +16,7 @@ router.get('/military-region', getContactsByMilitaryRegion)
 router.get('/province', getContactsByProvince)
 router.get('/ward', getContactsByWard)
 router.post('/', addContact)
+router.put('/:btlhcm_lh_malh', updateContact)
+router.delete('/:btlhcm_lh_malh', deleteContact)
 
 export default router

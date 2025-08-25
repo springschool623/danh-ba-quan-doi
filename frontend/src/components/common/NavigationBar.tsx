@@ -21,12 +21,13 @@ import { getWards } from '@/services/ward.service'
 import { Province } from '@/types/provinces'
 import { Ward } from '@/types/wards'
 import { userLogout } from '@/services/login.service'
+import { useUserRoles } from '@/hooks/useUserRoles'
 export function NavigationBar() {
   const [militaryRegions, setMilitaryRegions] = useState<MilitaryRegion[]>([])
   const [provinces, setProvinces] = useState<Province[]>([])
   const [wards, setWards] = useState<Ward[]>([])
   const [loading, setLoading] = useState(true)
-
+  const { hasRole } = useUserRoles()
   useEffect(() => {
     const fetchMilitaryRegions = async () => {
       try {
@@ -63,6 +64,9 @@ export function NavigationBar() {
     fetchWards()
   }, [])
 
+  // Kiểm tra vai trò của người dùng
+  const isAdmin = hasRole('Quản trị hệ thống')
+
   return (
     <div className="flex justify-between items-center py-4 border-b border-gray-200">
       {/* Navigation Menu bên trái */}
@@ -74,7 +78,7 @@ export function NavigationBar() {
               asChild
               className={navigationMenuTriggerStyle()}
             >
-              <Link href="/">Trang chủ</Link>
+              <Link href="/danh-ba">Trang chủ</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
           {/* Danh bạ Cấp Quân Khu */}
@@ -192,14 +196,18 @@ export function NavigationBar() {
             </NavigationMenuContent>
           </NavigationMenuItem>
           {/* Phân quyền Người dùng (Quản trị viên) */}
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              asChild
-              className={navigationMenuTriggerStyle()}
-            >
-              <Link href="/">Phân quyền Người dùng (Quản trị viên)</Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+          {isAdmin && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/quan-ly-nguoi-dung">
+                  Quản lý Người dùng (Quản trị hệ thống)
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
 

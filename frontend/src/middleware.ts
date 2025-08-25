@@ -3,9 +3,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === '/danh-ba') {
+  if (
+    request.nextUrl.pathname === '/danh-ba' ||
+    request.nextUrl.pathname === '/quan-ly-nguoi-dung'
+  ) {
     const token = request.cookies.get('token')?.value
-    console.log('Token:', token)
 
     if (!token) {
       console.log('Chưa đăng nhập!')

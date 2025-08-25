@@ -24,12 +24,6 @@ import {
 import { Button } from '../../../components/ui/button'
 import { useState, useEffect } from 'react'
 import { Input } from '../../../components/ui/input'
-// import {
-//   DropdownMenu,
-//   DropdownMenuCheckboxItem,
-//   DropdownMenuContent,
-//   DropdownMenuTrigger,
-// } from '../../../components/ui/dropdown-menu'
 import { Loader2, Pencil } from 'lucide-react'
 import {
   Dialog,
@@ -105,37 +99,37 @@ export function DataTable<TData, TValue>({
     setTableData(data)
   }, [data])
 
-  const handleToggleEdit = () => {
-    if (isEditing) {
-      // Save all changes
-      const updatedData = tableData.map((row, index) => {
-        const rowId = index.toString()
-        if (editingData[rowId]) {
-          return { ...row, ...editingData[rowId] }
-        }
-        return row
-      })
+  // const handleToggleEdit = () => {
+  //   if (isEditing) {
+  //     // Save all changes
+  //     const updatedData = tableData.map((row, index) => {
+  //       const rowId = index.toString()
+  //       if (editingData[rowId]) {
+  //         return { ...row, ...editingData[rowId] }
+  //       }
+  //       return row
+  //     })
 
-      setTableData(updatedData)
-      setIsEditing(false)
-      setEditingData({})
-      setEditingCells({})
+  //     setTableData(updatedData)
+  //     setIsEditing(false)
+  //     setEditingData({})
+  //     setEditingCells({})
 
-      if (onDataChange) {
-        onDataChange(updatedData)
-      }
-    } else {
-      // Enter edit mode
-      setIsEditing(true)
-      // Initialize editing data for all rows
-      const initialEditingData: Record<string, Record<string, unknown>> = {}
-      tableData.forEach((row, index) => {
-        initialEditingData[index.toString()] = row as Record<string, unknown>
-      })
-      setEditingData(initialEditingData)
-      setEditingCells({})
-    }
-  }
+  //     if (onDataChange) {
+  //       onDataChange(updatedData)
+  //     }
+  //   } else {
+  //     // Enter edit mode
+  //     setIsEditing(true)
+  //     // Initialize editing data for all rows
+  //     const initialEditingData: Record<string, Record<string, unknown>> = {}
+  //     tableData.forEach((row, index) => {
+  //       initialEditingData[index.toString()] = row as Record<string, unknown>
+  //     })
+  //     setEditingData(initialEditingData)
+  //     setEditingCells({})
+  //   }
+  // }
 
   const handleCellClick = (rowId: string, columnId: string) => {
     if (
@@ -284,19 +278,19 @@ export function DataTable<TData, TValue>({
             }
             className="max-w-sm"
           />
-          <Button
+          {/* <Button
             variant={isEditing ? 'edit' : 'outline'}
             className="ml-auto"
             onClick={handleToggleEdit}
           >
             {isEditing ? 'Lưu' : 'Chỉnh sửa'}
             <Pencil className="size-4" />
-          </Button>
+          </Button> */}
         </div>
         {/* Thêm danh bạ */}
         <div className="flex items-center py-4 ml-auto">
           <Button variant="edit" onClick={() => setIsAddContactOpen(true)}>
-            Thêm danh bạ
+            Thêm liên hệ
           </Button>
         </div>
       </div>
@@ -463,7 +457,7 @@ export function DataTable<TData, TValue>({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              Thêm danh bạ
+              Thêm liên hệ
             </DialogTitle>
             <DialogDescription>Thêm liên hệ mới vào danh bạ.</DialogDescription>
           </DialogHeader>

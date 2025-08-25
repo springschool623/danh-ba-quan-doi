@@ -103,3 +103,42 @@ export const addContact = async (req, res) => {
   )
   res.json(result.rows)
 }
+
+export const updateContact = async (req, res) => {
+  const { btlhcm_lh_malh } = req.params
+  const {
+    btlhcm_lh_hoten,
+    btlhcm_lh_capbac,
+    btlhcm_lh_chucvu,
+    btlhcm_lh_phongban,
+    btlhcm_lh_donvi,
+    btlhcm_lh_sdt_ds,
+    btlhcm_lh_sdt_qs,
+    btlhcm_lh_sdt_dd,
+  } = req.body
+  const result = await pool.query(
+    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phongban = $4, btlhcm_lh_donvi = $5, btlhcm_lh_sdt_ds = $6, btlhcm_lh_sdt_qs = $7, btlhcm_lh_sdt_dd = $8, btlhcm_lh_ngaycapnhat = $9 WHERE btlhcm_lh_malh = $10',
+    [
+      btlhcm_lh_hoten,
+      btlhcm_lh_capbac,
+      btlhcm_lh_chucvu,
+      btlhcm_lh_phongban,
+      btlhcm_lh_donvi,
+      btlhcm_lh_sdt_ds,
+      btlhcm_lh_sdt_qs,
+      btlhcm_lh_sdt_dd,
+      new Date(),
+      btlhcm_lh_malh,
+    ]
+  )
+  res.json(result.rows)
+}
+
+export const deleteContact = async (req, res) => {
+  const { btlhcm_lh_malh } = req.params
+  const result = await pool.query(
+    'DELETE FROM danhbalienhe WHERE btlhcm_lh_malh = $1',
+    [btlhcm_lh_malh]
+  )
+  res.json(result.rows)
+}

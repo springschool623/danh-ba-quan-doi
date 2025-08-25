@@ -1,5 +1,3 @@
-'use client'
-
 import { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,15 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Contact } from '@/types/contacts'
 import { formatDate } from '@/lib/utils'
+import { User } from '@/types/users'
 
-export const getContactColumns = (
-  onEdit: (contact: Contact) => void,
-  onDelete?: (contact: Contact) => void,
+export const getUserColumns = (
+  onEdit: (user: User) => void,
+  onDelete?: (user: User) => void,
+  onAddRole?: (user: User) => void,
   hasRole?: boolean
-): ColumnDef<Contact>[] => {
-  const columns: ColumnDef<Contact>[] = [
+): ColumnDef<User>[] => {
+  const columns: ColumnDef<User>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -44,61 +43,55 @@ export const getContactColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'btlhcm_lh_malh',
-      header: 'STT',
+      accessorKey: 'btlhcm_nd_mand',
+      header: 'Mã người dùng',
     },
     {
-      accessorKey: 'btlhcm_lh_hoten',
-      header: 'Họ tên',
+      accessorKey: 'btlhcm_nd_matkhau',
+      header: 'Mật khẩu',
+      cell: ({ row }) => {
+        const password = row.getValue('btlhcm_nd_matkhau') as string
+        return '•'.repeat(password?.length || 8)
+      },
     },
     {
-      accessorKey: 'btlhcm_cb_tencb',
-      header: 'Cấp Bậc',
+      accessorKey: 'btlhcm_nd_trangthai',
+      header: 'Trạng thái',
+      //in viền màu theo trạng thái
+      cell: ({ row }) => {
+        const trangthai = row.getValue('btlhcm_nd_trangthai') as boolean
+        return (
+          <>
+            <div
+              className={`w-fit rounded-md py-1 px-4 font-semibold text-white ${
+                trangthai ? 'bg-green-800' : 'bg-red-800'
+              }`}
+            >
+              {trangthai ? 'Đang hoạt động' : 'Vô hiệu hóa'}
+            </div>
+          </>
+        )
+      },
     },
     {
-      accessorKey: 'btlhcm_cv_tencv',
-      header: 'Chức vụ',
-    },
-    {
-      accessorKey: 'btlhcm_pb_tenpb',
-      header: 'Phòng ban',
-    },
-    {
-      accessorKey: 'btlhcm_dv_tendv',
-      header: 'Đơn vị',
-    },
-    {
-      accessorKey: 'btlhcm_lh_sdt_ds',
-      header: 'SĐT Dân sự',
-    },
-    {
-      accessorKey: 'btlhcm_lh_sdt_qs',
-      header: 'SĐT Quân sự',
-    },
-    {
-      accessorKey: 'btlhcm_lh_sdt_dd',
-      header: 'SĐT Di động',
-    },
-    {
-      accessorKey: 'btlhcm_lh_ngaytao',
+      accessorKey: 'btlhcm_nd_ngaytao',
       header: 'Ngày tạo',
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaytao') as string),
+        formatDate(row.getValue('btlhcm_nd_ngaytao') as string),
     },
     {
-      accessorKey: 'btlhcm_lh_ngaycapnhat',
+      accessorKey: 'btlhcm_nd_ngaycapnhat',
       header: 'Ngày cập nhật',
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaycapnhat') as string),
+        formatDate(row.getValue('btlhcm_nd_ngaycapnhat') as string),
     },
   ]
-
   if (hasRole) {
     columns.push({
       id: 'actions',
       header: 'Hành động',
       cell: ({ row }) => {
-        const contact = row.original
+        const user = row.original
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -109,12 +102,20 @@ export const getContactColumns = (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onEdit(contact)}>
+              <DropdownMenuItem
+                onClick={() => {
+                  onAddRole?.(user)
+                }}
+              >
+                Thêm vai trò cho người dùng
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onEdit(user)}>
                 Chỉnh sửa
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete?.(contact)}>
-                Xóa
+              <DropdownMenuItem onClick={() => onDelete?.(user)}>
+                Vô hiệu hóa
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
