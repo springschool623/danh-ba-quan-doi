@@ -41,11 +41,19 @@ CREATE TABLE ChucVu (
     btlhcm_cv_ngaycapnhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE PhongBan (
+CREATE TABLE Phong (
     btlhcm_pb_mapb SERIAL PRIMARY KEY,
     btlhcm_pb_tenpb VARCHAR(100) NOT NULL UNIQUE,
     btlhcm_pb_ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     btlhcm_pb_ngaycapnhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Ban (
+    btlhcm_ba_mab SERIAL PRIMARY KEY,
+    btlhcm_ba_tenb VARCHAR(100) NOT NULL UNIQUE,
+    btlhcm_ba_maphong INT NOT NULL REFERENCES Phong(btlhcm_pb_mapb) ON DELETE RESTRICT,
+    btlhcm_ba_ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    btlhcm_ba_ngaycapnhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE DonVi (
@@ -62,13 +70,14 @@ CREATE TABLE DonVi (
 CREATE TABLE DanhBaLienHe (
     btlhcm_lh_malh SERIAL PRIMARY KEY,
     btlhcm_lh_hoten VARCHAR(150) NOT NULL,
-    btlhcm_lh_capbac INT REFERENCES CapBac(btlhcm_cb_macb) ON DELETE CASCADE,
-    btlhcm_lh_chucvu INT REFERENCES ChucVu(btlhcm_cv_macv) ON DELETE CASCADE,
-    btlhcm_lh_phongban INT REFERENCES PhongBan(btlhcm_pb_mapb) ON DELETE CASCADE,
-	btlhcm_lh_donvi INT REFERENCES DonVi(btlhcm_dv_madv) ON DELETE CASCADE,
-    btlhcm_lh_sdt_ds VARCHAR(20),
-	btlhcm_lh_sdt_qs VARCHAR(20),
-    btlhcm_lh_sdt_dd VARCHAR(20) UNIQUE,
+    btlhcm_lh_capbac INT NULL REFERENCES CapBac(btlhcm_cb_macb) ON DELETE RESTRICT,
+    btlhcm_lh_chucvu INT NULL REFERENCES ChucVu(btlhcm_cv_macv) ON DELETE RESTRICT,
+    btlhcm_lh_phong INT NULL REFERENCES Phong(btlhcm_pb_mapb) ON DELETE RESTRICT,
+	btlhcm_lh_ban INT NULL REFERENCES Ban(btlhcm_ba_mab) ON DELETE RESTRICT,
+	btlhcm_lh_donvi INT NULL REFERENCES DonVi(btlhcm_dv_madv) ON DELETE RESTRICT,
+    btlhcm_lh_sdt_ds VARCHAR(20) NULL,
+	btlhcm_lh_sdt_qs VARCHAR(20) NULL,
+    btlhcm_lh_sdt_dd VARCHAR(20) NULL UNIQUE,
     btlhcm_lh_ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     btlhcm_lh_ngaycapnhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -128,4 +137,4 @@ CREATE TABLE QuyenTruyCapTheoKhuVuc (
     )
 );
 
-DROP TABLE IF EXISTS QuanKhu, TinhThanh, PhuongXa, CapBac, ChucVu, PhongBan, DonVi, DanhBaLienHe, NguoiDung, VaiTro, QuyenHan, VaiTroNguoiDung, QuyenHanVaiTro, QuyenTruyCapTheoKhuVuc;
+DROP TABLE IF EXISTS QuanKhu, TinhThanh, PhuongXa, CapBac, ChucVu, Phong, Ban, DonVi, DanhBaLienHe, NguoiDung, VaiTro, QuyenHan, VaiTroNguoiDung, QuyenHanVaiTro, QuyenTruyCapTheoKhuVuc;

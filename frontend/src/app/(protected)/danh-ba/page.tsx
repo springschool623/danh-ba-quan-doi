@@ -42,6 +42,8 @@ import { Department } from '@/types/departments'
 import { Location } from '@/types/locations'
 import { toast } from 'sonner'
 import { useUserRoles } from '@/hooks/useUserRoles'
+import { Committee } from '@/types/committees'
+import { getCommittees } from '@/services/committee.service'
 
 export default function ContactPage() {
   const [data, setData] = useState<Contact[]>([])
@@ -52,6 +54,7 @@ export default function ContactPage() {
   const searchParams = useSearchParams()
   const [locations, setLocations] = useState<Location[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
+  const [committees, setCommittees] = useState<Committee[]>([])
   const [ranks, setRanks] = useState<Rank[]>([])
   const [positions, setPositions] = useState<Position[]>([])
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -61,7 +64,8 @@ export default function ContactPage() {
     btlhcm_lh_hoten: '',
     btlhcm_lh_capbac: 0,
     btlhcm_lh_chucvu: 0,
-    btlhcm_lh_phongban: 0,
+    btlhcm_lh_phong: 0,
+    btlhcm_lh_ban: 0,
     btlhcm_lh_donvi: 0,
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
@@ -69,7 +73,7 @@ export default function ContactPage() {
     btlhcm_lh_ngaytao: new Date(),
     btlhcm_lh_ngaycapnhat: new Date(),
   })
-  const { hasRole } = useUserRoles()
+  const { hasAnyRole, roles } = useUserRoles()
   useEffect(() => {
     // Kiểm tra cookie token
     const cookies = document.cookie.split(';')
@@ -127,6 +131,10 @@ export default function ContactPage() {
       const departments = await getDepartments()
       setDepartments(departments)
     }
+    const fetchCommittees = async () => {
+      const committees = await getCommittees()
+      setCommittees(committees)
+    }
     const fetchRanks = async () => {
       const ranks = await getRanks()
       setRanks(ranks)
@@ -137,9 +145,34 @@ export default function ContactPage() {
     }
     fetchLocations()
     fetchDepartments()
+    fetchCommittees()
     fetchPositions()
     fetchRanks()
   }, [])
+
+  // Reset committee when department changes
+  useEffect(() => {
+    if (formData.btlhcm_lh_phong === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        btlhcm_lh_ban: 0,
+      }))
+    } else {
+      // Check if current committee belongs to new department
+      const currentCommittee = committees.find(
+        (c) => c.btlhcm_ba_mab === formData.btlhcm_lh_ban
+      )
+      if (
+        currentCommittee &&
+        currentCommittee.btlhcm_ba_maphong !== formData.btlhcm_lh_phong
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          btlhcm_lh_ban: 0,
+        }))
+      }
+    }
+  }, [formData.btlhcm_lh_phong, committees, formData.btlhcm_lh_ban])
 
   const handleEdit = (contact: Contact) => {
     setFormData(contact)
@@ -157,7 +190,8 @@ export default function ContactPage() {
           btlhcm_lh_hoten: '',
           btlhcm_lh_capbac: 0,
           btlhcm_lh_chucvu: 0,
-          btlhcm_lh_phongban: 0,
+          btlhcm_lh_phong: 0,
+          btlhcm_lh_ban: 0,
           btlhcm_lh_donvi: 0,
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
@@ -221,7 +255,7 @@ export default function ContactPage() {
       }`
     }
     if (selectedWard && data.length > 0) {
-      return `Danh bạ Phường/Xã: ${data[0]?.btlhcm_px_tenpx || selectedWard}`
+      return `Danh bạ ${data[0]?.btlhcm_px_tenpx || selectedWard}`
     }
     return ''
   }
@@ -252,9 +286,7 @@ export default function ContactPage() {
           <div className="mb-4 p-3 bg-green-50 border border-green-800 rounded-md">
             <p className="text-green-800">
               Đang hiển thị danh bạ của{' '}
-              <strong>
-                Phường/Xã {data[0]?.btlhcm_px_tenpx || selectedWard}
-              </strong>
+              <strong>{data[0]?.btlhcm_px_tenpx || selectedWard}</strong>
             </p>
           </div>
         )}
@@ -262,10 +294,16 @@ export default function ContactPage() {
           columns={getContactColumns(
             handleEdit,
             handleDelete,
-            hasRole('Quản trị viên')
+            hasAnyRole([
+              'Quản trị hệ thống (Super Admin)',
+              'Quản trị hệ thống (Admin)',
+              'Quản trị viên (User)',
+            ])
           )}
           data={data}
           onDataChange={handleDataChange}
+          selectedRegion={selectedRegion || undefined}
+          userRole={roles.find((role) => role.btlhcm_vt_tenvt)?.btlhcm_vt_tenvt}
         />
       </div>
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -297,132 +335,181 @@ export default function ContactPage() {
               </div>
 
               {/* Cấp bậc */}
-              <div className="grid gap-3 col-span-1">
-                <Label htmlFor="rank">Cấp bậc:</Label>
-                <Select
-                  value={
-                    formData.btlhcm_lh_capbac.toString() === '0'
-                      ? ''
-                      : formData.btlhcm_lh_capbac.toString()
-                  }
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData,
-                      btlhcm_lh_capbac: parseInt(value),
-                    })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn cấp bậc" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ranks.map((rank) => (
-                      <SelectItem
-                        key={rank.btlhcm_cb_macb}
-                        value={rank.btlhcm_cb_macb?.toString() || ''}
-                      >
-                        {rank.btlhcm_cb_tencb}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {ranks.length > 0 && (
+                <div className="grid gap-3 col-span-1">
+                  <Label htmlFor="rank">Cấp bậc:</Label>
+                  <Select
+                    value={formData.btlhcm_lh_capbac?.toString() || ''}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        btlhcm_lh_capbac: parseInt(value),
+                      })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn cấp bậc" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ranks.map((rank) => (
+                        <SelectItem
+                          key={rank.btlhcm_cb_macb}
+                          value={rank.btlhcm_cb_macb?.toString() || ''}
+                        >
+                          {rank.btlhcm_cb_tencb}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Chức vụ */}
-              <div className="grid gap-3">
-                <Label htmlFor="position">Chức vụ:</Label>
-                <Select
-                  value={
-                    formData.btlhcm_lh_chucvu.toString() === '0'
-                      ? ''
-                      : formData.btlhcm_lh_chucvu.toString()
-                  }
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData,
-                      btlhcm_lh_chucvu: parseInt(value),
-                    })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn chức vụ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((position) => (
-                      <SelectItem
-                        key={position.btlhcm_cv_macv}
-                        value={position.btlhcm_cv_macv?.toString() || ''}
-                      >
-                        {position.btlhcm_cv_tencv}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {positions.length > 0 && (
+                <div className="grid gap-3">
+                  <Label htmlFor="position">Chức vụ:</Label>
+                  <Select
+                    value={formData.btlhcm_lh_chucvu?.toString() || ''}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        btlhcm_lh_chucvu: parseInt(value),
+                      })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn chức vụ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map((position) => (
+                        <SelectItem
+                          key={position.btlhcm_cv_macv}
+                          value={position.btlhcm_cv_macv?.toString() || ''}
+                        >
+                          {position.btlhcm_cv_tencv}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {/* Phòng ban */}
-              <div className="grid gap-3">
-                <Label htmlFor="department">Phòng ban:</Label>
-                <Select
-                  value={
-                    formData.btlhcm_lh_phongban.toString() === '0'
-                      ? ''
-                      : formData.btlhcm_lh_phongban.toString()
-                  }
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData,
-                      btlhcm_lh_phongban: parseInt(value),
-                    })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn phòng ban" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((department) => (
-                      <SelectItem
-                        key={department.btlhcm_pb_mapb}
-                        value={department.btlhcm_pb_mapb?.toString() || ''}
-                      >
-                        {department.btlhcm_pb_tenpb}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Phòng */}
+              {departments.length > 0 && (
+                <div className="grid gap-3">
+                  <Label htmlFor="department">Phòng:</Label>
+                  <Select
+                    value={formData.btlhcm_lh_phong?.toString() || ''}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        btlhcm_lh_phong: parseInt(value),
+                      })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn phòng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((department) => (
+                        <SelectItem
+                          key={department.btlhcm_pb_mapb}
+                          value={department.btlhcm_pb_mapb?.toString() || ''}
+                        >
+                          {department.btlhcm_pb_tenpb}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Ban */}
+              {committees.length > 0 && (
+                <div className="grid gap-3">
+                  <Label htmlFor="committee">Ban:</Label>
+                  <Select
+                    value={formData.btlhcm_lh_ban?.toString() || ''}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        btlhcm_lh_ban: parseInt(value),
+                      })
+                    }}
+                    disabled={
+                      formData.btlhcm_lh_phong === 0 ||
+                      !committees.some(
+                        (committee) =>
+                          committee.btlhcm_ba_maphong ===
+                          formData.btlhcm_lh_phong
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          formData.btlhcm_lh_phong === 0
+                            ? 'Chọn ban'
+                            : !committees.some(
+                                (committee) =>
+                                  committee.btlhcm_ba_maphong ===
+                                  formData.btlhcm_lh_phong
+                              )
+                            ? 'Phòng không có ban'
+                            : 'Chọn ban'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {committees
+                        .filter(
+                          (committee) =>
+                            formData.btlhcm_lh_phong === 0 ||
+                            committee.btlhcm_ba_maphong ===
+                              formData.btlhcm_lh_phong
+                        )
+                        .map((committee) => (
+                          <SelectItem
+                            key={committee.btlhcm_ba_mab}
+                            value={committee.btlhcm_ba_mab?.toString() || ''}
+                          >
+                            {committee.btlhcm_ba_tenb}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Đơn vị */}
-              <div className="grid gap-3">
-                <Label htmlFor="unit">Đơn vị:</Label>
-                <Select
-                  value={
-                    formData.btlhcm_lh_donvi.toString() === '0'
-                      ? ''
-                      : formData.btlhcm_lh_donvi.toString()
-                  }
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData,
-                      btlhcm_lh_donvi: parseInt(value),
-                    })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn đơn vị" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem
-                        key={location.btlhcm_dv_madv}
-                        value={location.btlhcm_dv_madv?.toString() || ''}
-                      >
-                        {location.btlhcm_dv_tendv}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {locations.length > 0 && (
+                <div className="grid gap-3">
+                  <Label htmlFor="unit">Đơn vị:</Label>
+                  <Select
+                    value={formData.btlhcm_lh_donvi?.toString() || ''}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        btlhcm_lh_donvi: parseInt(value),
+                      })
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn đơn vị" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map((location) => (
+                        <SelectItem
+                          key={location.btlhcm_dv_madv}
+                          value={location.btlhcm_dv_madv?.toString() || ''}
+                        >
+                          {location.btlhcm_dv_tendv}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
 

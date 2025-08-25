@@ -79,3 +79,11 @@ export const addRolesToUser = async (user: User, roles: string[]) => {
 
   return response
 }
+
+export const getUserRoles = async (user: User) => {
+  const response = await fetch(
+    `http://localhost:5000/api/users/${user.btlhcm_nd_mand}/roles`
+  )
+  const data = await response.json()
+  return data
+}

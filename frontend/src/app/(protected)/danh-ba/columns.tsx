@@ -46,6 +46,7 @@ export const getContactColumns = (
     {
       accessorKey: 'btlhcm_lh_malh',
       header: 'STT',
+      cell: ({ row }) => row.index + 1,
     },
     {
       accessorKey: 'btlhcm_lh_hoten',
@@ -60,8 +61,12 @@ export const getContactColumns = (
       header: 'Chức vụ',
     },
     {
+      accessorKey: 'btlhcm_ba_tenb',
+      header: 'Ban',
+    },
+    {
       accessorKey: 'btlhcm_pb_tenpb',
-      header: 'Phòng ban',
+      header: 'Phòng',
     },
     {
       accessorKey: 'btlhcm_dv_tendv',

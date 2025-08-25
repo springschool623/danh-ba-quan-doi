@@ -1,8 +1,8 @@
 import { pool } from '../db.js'
 
-export const getAllDepartments = async (req, res) => {
+export const getAllCommittees = async (req, res) => {
   const result = await pool.query(`
-    SELECT * FROM phong
+    SELECT * FROM ban
   `)
   res.json(result.rows)
 }

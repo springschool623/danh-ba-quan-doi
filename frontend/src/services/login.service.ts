@@ -7,6 +7,7 @@ export const userLogin = async (username: string, password: string) => {
     credentials: 'include',
     body: JSON.stringify({ username, password }),
   })
+  console.log(username)
   return response
 }
 

@@ -20,19 +20,13 @@ import {
 
 export function PageBreadcrumb({ label }: { label: string }) {
   const searchParams = useSearchParams()
-  const militaryRegion = searchParams.get('quankhu')
+  // const militaryRegion = searchParams.get('quankhu')
   const province = searchParams.get('tinhthanh')
   const ward = searchParams.get('phuongxa')
   return (
-    <Breadcrumb className="pt-5 pl-4">
+    <Breadcrumb className="pt-5">
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/">Trang chủ</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
+        {/* <BreadcrumbItem>
           {militaryRegion ? (
             <BreadcrumbLink asChild>
               <Link href="/danh-ba">Danh bạ Cấp Quân Khu</Link>
@@ -48,15 +42,24 @@ export function PageBreadcrumb({ label }: { label: string }) {
               <BreadcrumbPage>{label}</BreadcrumbPage>
             </BreadcrumbItem>
           </>
-        )}
-        {province && (
+        )} */}
+        <BreadcrumbItem>
+          {!province && (
+            <BreadcrumbLink asChild>
+              <Link href="/danh-ba?tinhthanh=1">
+                Danh bạ Thành phố Hồ Chí Minh
+              </Link>
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>
+        {/* {province && (
           <>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage>{label}</BreadcrumbPage>
             </BreadcrumbItem>
           </>
-        )}
+        )} */}
         {ward && (
           <>
             <BreadcrumbSeparator />

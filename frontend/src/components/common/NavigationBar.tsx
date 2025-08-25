@@ -65,7 +65,7 @@ export function NavigationBar() {
   }, [])
 
   // Kiểm tra vai trò của người dùng
-  const isAdmin = hasRole('Quản trị hệ thống')
+  const isAdmin = hasRole('Quản trị hệ thống (Super Admin)')
 
   return (
     <div className="flex justify-between items-center py-4 border-b border-gray-200">
@@ -73,16 +73,16 @@ export function NavigationBar() {
       <NavigationMenu>
         <NavigationMenuList>
           {/* Trang chủ */}
-          <NavigationMenuItem>
+          {/* <NavigationMenuItem>
             <NavigationMenuLink
               asChild
               className={navigationMenuTriggerStyle()}
             >
-              <Link href="/danh-ba">Trang chủ</Link>
+              <Link href="/danh-ba?tinhthanh=2">Trang chủ</Link>
             </NavigationMenuLink>
-          </NavigationMenuItem>
+          </NavigationMenuItem> */}
           {/* Danh bạ Cấp Quân Khu */}
-          <NavigationMenuItem>
+          {/* <NavigationMenuItem>
             <Link href="/danh-ba">
               <NavigationMenuTrigger>
                 Danh bạ Cấp Quân Khu
@@ -120,10 +120,20 @@ export function NavigationBar() {
                 )}
               </div>
             </NavigationMenuContent>
-          </NavigationMenuItem>
-          {/* Danh bạ Cấp Tỉnh */}
+          </NavigationMenuItem> */}
+          {/* Danh bạ Thành phố Hồ Chí Minh */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger>Danh bạ Cấp Tỉnh</NavigationMenuTrigger>
+            <NavigationMenuLink
+              asChild
+              className={navigationMenuTriggerStyle()}
+            >
+              <Link href="/danh-ba?tinhthanh=1">
+                Danh bạ Thành phố Hồ Chí Minh
+              </Link>
+            </NavigationMenuLink>
+            {/* <NavigationMenuTrigger>
+              Danh bạ Thành phố Hồ Chí Minh
+            </NavigationMenuTrigger>
             <NavigationMenuContent className="z-50">
               <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                 {loading ? (
@@ -157,7 +167,7 @@ export function NavigationBar() {
                   </div>
                 )}
               </div>
-            </NavigationMenuContent>
+            </NavigationMenuContent> */}
           </NavigationMenuItem>
           {/* Danh bạ Cấp Phường */}
           <NavigationMenuItem>
@@ -195,7 +205,7 @@ export function NavigationBar() {
               </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
-          {/* Phân quyền Người dùng (Quản trị viên) */}
+          {/* Phân quyền Người dùng () */}
           {isAdmin && (
             <NavigationMenuItem>
               <NavigationMenuLink

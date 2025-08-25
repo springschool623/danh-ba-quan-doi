@@ -41,15 +41,33 @@ export const addRolesToUser = async (req, res) => {
   const { roles } = req.body
   console.log('Vai trò: ', roles)
   try {
+    // Xóa tất cả vai trò hiện tại của user
+    await pool.query(
+      `DELETE FROM vaitronguoidung WHERE btlhcm_vtnd_mand = $1`,
+      [btlhcm_nd_mand]
+    )
+
+    // Thêm các vai trò mới
     for (const role of roles) {
-      const result = await pool.query(
-        `INSERT INTO vaitronguoidung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) VALUES ($1, $2) ON CONFLICT (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) DO NOTHING`,
+      await pool.query(
+        `INSERT INTO vaitronguoidung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) VALUES ($1, $2)`,
         [btlhcm_nd_mand, role]
       )
-      res.json(result.rows)
     }
+
+    // Trả về response thành công
+    res.json({ message: 'Cập nhật vai trò thành công', roles: roles })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Lỗi khi thêm vai trò' })
+    res.status(500).json({ error: 'Lỗi khi cập nhật vai trò' })
   }
+}
+
+export const getUserRoles = async (req, res) => {
+  const { btlhcm_nd_mand } = req.params
+  const result = await pool.query(
+    `SELECT * FROM vaitronguoidung vtnd JOIN vaitro vt ON vtnd.btlhcm_vtnd_mavt = vt.btlhcm_vt_mavt WHERE btlhcm_vtnd_mand = $1`,
+    [btlhcm_nd_mand]
+  )
+  res.json(result.rows)
 }

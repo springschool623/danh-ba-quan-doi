@@ -22,9 +22,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '../../../components/ui/button'
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Input } from '../../../components/ui/input'
-import { Loader2, Pencil } from 'lucide-react'
+import { FilterIcon, Loader2, MinusIcon } from 'lucide-react'
 import {
   Dialog,
   DialogFooter,
@@ -51,23 +51,28 @@ import { getDepartments } from '@/services/department.service'
 import { getRanks } from '@/services/rank.service'
 import { getPositions } from '@/services/position.service'
 import { toast } from 'sonner'
+import { Committee } from '@/types/committees'
+import { getCommittees } from '@/services/committee.service'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onDataChange?: (newData: TData[]) => void
+  selectedRegion?: string
+  userRole?: string
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  onDataChange,
+  selectedRegion,
+  userRole,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing] = useState(false)
   const [editingData, setEditingData] = useState<
     Record<string, Record<string, unknown>>
   >({})
@@ -78,14 +83,17 @@ export function DataTable<TData, TValue>({
   const [isAddContactOpen, setIsAddContactOpen] = useState(false)
   const [locations, setLocations] = useState<Location[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
+  const [committees, setCommittees] = useState<Committee[]>([])
   const [ranks, setRanks] = useState<Rank[]>([])
   const [positions, setPositions] = useState<Position[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [showFilter, setShowFilter] = useState(false)
   const [formData, setFormData] = useState({
     btlhcm_lh_hoten: '',
     btlhcm_lh_capbac: 0,
     btlhcm_lh_chucvu: 0,
-    btlhcm_lh_phongban: 0,
+    btlhcm_lh_phong: 0,
+    btlhcm_lh_ban: 0,
     btlhcm_lh_donvi: 0,
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
@@ -96,8 +104,20 @@ export function DataTable<TData, TValue>({
 
   // Update table data when prop data changes
   useEffect(() => {
-    setTableData(data)
-  }, [data])
+    let filteredData = data
+
+    // Filter out contacts from "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
+    if (userRole === 'Quản trị viên (User)') {
+      filteredData = data.filter((contact: TData) => {
+        // Check if contact belongs to the restricted department
+        // "Phòng Thủ trưởng Bộ Tư Lệnh" has ID 1
+        const contactData = contact as Record<string, unknown>
+        return (contactData.btlhcm_lh_phong as number) !== 1
+      })
+    }
+
+    setTableData(filteredData)
+  }, [data, userRole])
 
   // const handleToggleEdit = () => {
   //   if (isEditing) {
@@ -176,7 +196,8 @@ export function DataTable<TData, TValue>({
           btlhcm_lh_hoten: '',
           btlhcm_lh_capbac: 0,
           btlhcm_lh_chucvu: 0,
-          btlhcm_lh_phongban: 0,
+          btlhcm_lh_phong: 0,
+          btlhcm_lh_ban: 0,
           btlhcm_lh_donvi: 0,
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
@@ -216,10 +237,15 @@ export function DataTable<TData, TValue>({
       const positions = await getPositions()
       setPositions(positions)
     }
+    const fetchCommittees = async () => {
+      const committees = await getCommittees()
+      setCommittees(committees)
+    }
     fetchLocations()
     fetchDepartments()
     fetchPositions()
     fetchRanks()
+    fetchCommittees()
   }, [])
 
   useEffect(() => {
@@ -228,7 +254,8 @@ export function DataTable<TData, TValue>({
         btlhcm_lh_hoten: '',
         btlhcm_lh_capbac: 0,
         btlhcm_lh_chucvu: 0,
-        btlhcm_lh_phongban: 0,
+        btlhcm_lh_phong: 0,
+        btlhcm_lh_ban: 0,
         btlhcm_lh_donvi: 0,
         btlhcm_lh_sdt_ds: '',
         btlhcm_lh_sdt_qs: '',
@@ -238,6 +265,60 @@ export function DataTable<TData, TValue>({
       })
     }
   }, [isAddContactOpen])
+
+  // Allowed option sets by selectedRegion (phường)
+  const regionScopedRows = useMemo(() => {
+    const rows = (tableData as unknown as Record<string, unknown>[]) || []
+    if (!selectedRegion) return rows
+    return rows.filter(
+      (r) => (r['btlhcm_px_tenpx'] as string | undefined) === selectedRegion
+    )
+  }, [tableData, selectedRegion])
+
+  const allowedRankNames = useMemo(() => {
+    const s = new Set<string>()
+    regionScopedRows.forEach((r) => {
+      const name = r['btlhcm_cb_tencb'] as string | undefined
+      if (name) s.add(name)
+    })
+    return s
+  }, [regionScopedRows])
+
+  const allowedPositionNames = useMemo(() => {
+    const s = new Set<string>()
+    regionScopedRows.forEach((r) => {
+      const name = r['btlhcm_cv_tencv'] as string | undefined
+      if (name) s.add(name)
+    })
+    return s
+  }, [regionScopedRows])
+
+  const allowedDepartmentNames = useMemo(() => {
+    const s = new Set<string>()
+    regionScopedRows.forEach((r) => {
+      const name = r['btlhcm_pb_tenpb'] as string | undefined
+      if (name) s.add(name)
+    })
+    return s
+  }, [regionScopedRows])
+
+  const allowedCommitteeNames = useMemo(() => {
+    const s = new Set<string>()
+    regionScopedRows.forEach((r) => {
+      const name = r['btlhcm_ba_tenb'] as string | undefined
+      if (name) s.add(name)
+    })
+    return s
+  }, [regionScopedRows])
+
+  const allowedUnitNames = useMemo(() => {
+    const s = new Set<string>()
+    regionScopedRows.forEach((r) => {
+      const name = r['btlhcm_dv_tendv'] as string | undefined
+      if (name) s.add(name)
+    })
+    return s
+  }, [regionScopedRows])
 
   const table = useReactTable({
     data: tableData,
@@ -278,14 +359,272 @@ export function DataTable<TData, TValue>({
             }
             className="max-w-sm"
           />
-          {/* <Button
-            variant={isEditing ? 'edit' : 'outline'}
-            className="ml-auto"
-            onClick={handleToggleEdit}
-          >
-            {isEditing ? 'Lưu' : 'Chỉnh sửa'}
-            <Pencil className="size-4" />
-          </Button> */}
+          {!showFilter && (
+            <Button
+              variant="outline"
+              onClick={() => setShowFilter(!showFilter)}
+            >
+              <FilterIcon className="size-4" />
+              Hiện bộ lọc
+            </Button>
+          )}
+          {showFilter && (
+            <div className="flex items-center gap-2">
+              {/* Lọc theo cấp bậc */}
+              <Select
+                value={
+                  (table
+                    .getColumn('btlhcm_cb_tencb')
+                    ?.getFilterValue() as string) ?? ''
+                }
+                onValueChange={(value) =>
+                  value === '__all__'
+                    ? table
+                        .getColumn('btlhcm_cb_tencb')
+                        ?.setFilterValue(undefined)
+                    : table.getColumn('btlhcm_cb_tencb')?.setFilterValue(value)
+                }
+              >
+                <SelectTrigger className="min-w-[160px]">
+                  <SelectValue placeholder="Cấp bậc" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả cấp bậc</SelectItem>
+                  {ranks
+                    .filter((rank) =>
+                      allowedRankNames.size === 0
+                        ? true
+                        : allowedRankNames.has(rank.btlhcm_cb_tencb || '')
+                    )
+                    .map((rank) => (
+                      <SelectItem
+                        key={rank.btlhcm_cb_macb}
+                        value={rank.btlhcm_cb_tencb || ''}
+                      >
+                        {rank.btlhcm_cb_tencb}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {/* Lọc theo chức vụ */}
+              <Select
+                value={
+                  (table
+                    .getColumn('btlhcm_cv_tencv')
+                    ?.getFilterValue() as string) ?? ''
+                }
+                onValueChange={(value) =>
+                  value === '__all__'
+                    ? table
+                        .getColumn('btlhcm_cv_tencv')
+                        ?.setFilterValue(undefined)
+                    : table.getColumn('btlhcm_cv_tencv')?.setFilterValue(value)
+                }
+              >
+                <SelectTrigger className="min-w-[160px]">
+                  <SelectValue placeholder="Chức vụ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả chức vụ</SelectItem>
+                  {positions
+                    .filter((position) =>
+                      allowedPositionNames.size === 0
+                        ? true
+                        : allowedPositionNames.has(
+                            position.btlhcm_cv_tencv || ''
+                          )
+                    )
+                    .map((position) => (
+                      <SelectItem
+                        key={position.btlhcm_cv_macv}
+                        value={position.btlhcm_cv_tencv || ''}
+                      >
+                        {position.btlhcm_cv_tencv}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {/* Lọc theo ban */}
+              {committees.length > 0 &&
+                committees.some((committee) => committee.btlhcm_ba_tenb) && (
+                  <Select
+                    value={
+                      (table
+                        .getColumn('btlhcm_ba_tenb')
+                        ?.getFilterValue() as string) ?? ''
+                    }
+                    onValueChange={(value) =>
+                      value === '__all__'
+                        ? table
+                            .getColumn('btlhcm_ba_tenb')
+                            ?.setFilterValue(undefined)
+                        : table
+                            .getColumn('btlhcm_ba_tenb')
+                            ?.setFilterValue(value)
+                    }
+                  >
+                    <SelectTrigger className="min-w-[160px]">
+                      <SelectValue placeholder="Ban" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">Tất cả ban</SelectItem>
+                      {committees
+                        .filter((committee) => {
+                          // First filter by allowed committee names from region
+                          const regionFilter =
+                            allowedCommitteeNames.size === 0
+                              ? true
+                              : allowedCommitteeNames.has(
+                                  committee.btlhcm_ba_tenb || ''
+                                )
+
+                          // Hide committees from "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
+                          if (
+                            userRole === 'Quản trị viên (Admin)' &&
+                            committee.btlhcm_ba_maphong === 1
+                          ) {
+                            return false
+                          }
+
+                          // Then filter by selected department
+                          const selectedDepartment = table
+                            .getColumn('btlhcm_pb_tenpb')
+                            ?.getFilterValue() as string
+
+                          if (
+                            !selectedDepartment ||
+                            selectedDepartment === '__all__'
+                          ) {
+                            return regionFilter
+                          }
+
+                          // Find the department by name to get its ID
+                          const department = departments.find(
+                            (dept) =>
+                              dept.btlhcm_pb_tenpb === selectedDepartment
+                          )
+
+                          if (!department) return regionFilter
+
+                          // Only show committees that belong to the selected department
+                          return (
+                            regionFilter &&
+                            committee.btlhcm_ba_maphong ===
+                              department.btlhcm_pb_mapb
+                          )
+                        })
+                        .map((committee) => (
+                          <SelectItem
+                            key={committee.btlhcm_ba_mab}
+                            value={committee.btlhcm_ba_tenb || ''}
+                          >
+                            {committee.btlhcm_ba_tenb}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+              {/* Lọc theo phòng */}
+              <Select
+                value={
+                  (table
+                    .getColumn('btlhcm_pb_tenpb')
+                    ?.getFilterValue() as string) ?? ''
+                }
+                onValueChange={(value) =>
+                  value === '__all__'
+                    ? table
+                        .getColumn('btlhcm_pb_tenpb')
+                        ?.setFilterValue(undefined)
+                    : table.getColumn('btlhcm_pb_tenpb')?.setFilterValue(value)
+                }
+              >
+                <SelectTrigger className="min-w-[160px]">
+                  <SelectValue placeholder="Phòng" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả phòng</SelectItem>
+                  {departments
+                    .filter((department) => {
+                      // Filter by allowed department names from region
+                      const regionFilter =
+                        allowedDepartmentNames.size === 0
+                          ? true
+                          : allowedDepartmentNames.has(
+                              department.btlhcm_pb_tenpb || ''
+                            )
+
+                      // Hide "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
+                      if (
+                        userRole === 'Quản trị viên (Admin)' &&
+                        department.btlhcm_pb_mapb === 1
+                      ) {
+                        return false
+                      }
+
+                      return regionFilter
+                    })
+                    .map((department) => (
+                      <SelectItem
+                        key={department.btlhcm_pb_mapb}
+                        value={department.btlhcm_pb_tenpb || ''}
+                      >
+                        {department.btlhcm_pb_tenpb}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {/* Lọc theo đơn vị */}
+              <Select
+                value={
+                  (table
+                    .getColumn('btlhcm_dv_tendv')
+                    ?.getFilterValue() as string) ?? ''
+                }
+                onValueChange={(value) =>
+                  value === '__all__'
+                    ? table
+                        .getColumn('btlhcm_dv_tendv')
+                        ?.setFilterValue(undefined)
+                    : table.getColumn('btlhcm_dv_tendv')?.setFilterValue(value)
+                }
+              >
+                <SelectTrigger className="min-w-[160px]">
+                  <SelectValue placeholder="Đơn vị" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Tất cả đơn vị</SelectItem>
+                  {locations
+                    .filter((location) =>
+                      allowedUnitNames.size === 0
+                        ? true
+                        : allowedUnitNames.has(location.btlhcm_dv_tendv || '')
+                    )
+                    .map((location) => (
+                      <SelectItem
+                        key={location.btlhcm_dv_madv}
+                        value={location.btlhcm_dv_tendv || ''}
+                      >
+                        {location.btlhcm_dv_tendv}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {showFilter && (
+            <Button
+              variant="outline"
+              onClick={() => setShowFilter(!showFilter)}
+            >
+              <MinusIcon className="size-4" />
+              Ẩn bộ lọc
+            </Button>
+          )}
         </div>
         {/* Thêm danh bạ */}
         <div className="flex items-center py-4 ml-auto">
@@ -545,24 +884,25 @@ export function DataTable<TData, TValue>({
                 </Select>
               </div>
 
-              {/* Phòng ban */}
+              {/* Phòng */}
               <div className="grid gap-3">
-                <Label htmlFor="department">Phòng ban:</Label>
+                <Label htmlFor="department">Phòng:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_phongban.toString() === '0'
+                    formData.btlhcm_lh_phong.toString() === '0'
                       ? ''
-                      : formData.btlhcm_lh_phongban.toString()
+                      : formData.btlhcm_lh_phong.toString()
                   }
                   onValueChange={(value) => {
                     setFormData({
                       ...formData,
-                      btlhcm_lh_phongban: parseInt(value),
+                      btlhcm_lh_phong: parseInt(value),
+                      btlhcm_lh_ban: 0, // Reset ban khi phòng thay đổi
                     })
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn phòng ban" />
+                    <SelectValue placeholder="Chọn phòng" />
                   </SelectTrigger>
                   <SelectContent>
                     {departments.map((department) => (
@@ -573,6 +913,66 @@ export function DataTable<TData, TValue>({
                         {department.btlhcm_pb_tenpb}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Ban */}
+              <div className="grid gap-3">
+                <Label htmlFor="committee">Ban:</Label>
+                <Select
+                  value={
+                    formData.btlhcm_lh_ban.toString() === '0'
+                      ? ''
+                      : formData.btlhcm_lh_ban.toString()
+                  }
+                  onValueChange={(value) => {
+                    setFormData({
+                      ...formData,
+                      btlhcm_lh_ban: parseInt(value),
+                    })
+                  }}
+                  disabled={
+                    formData.btlhcm_lh_phong === 0 ||
+                    !committees.some(
+                      (committee) =>
+                        committee.btlhcm_ba_maphong === formData.btlhcm_lh_phong
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        formData.btlhcm_lh_phong === 0
+                          ? 'Chọn ban'
+                          : !committees.some(
+                              (committee) =>
+                                committee.btlhcm_ba_maphong ===
+                                formData.btlhcm_lh_phong
+                            )
+                          ? 'Phòng không có ban'
+                          : 'Chọn ban'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {committees
+                      .filter((committee) => {
+                        // Chỉ hiển thị ban thuộc về phòng đã chọn
+                        if (formData.btlhcm_lh_phong === 0) return false
+                        return (
+                          committee.btlhcm_ba_maphong ===
+                          formData.btlhcm_lh_phong
+                        )
+                      })
+                      .map((committee) => (
+                        <SelectItem
+                          key={committee.btlhcm_ba_mab}
+                          value={committee.btlhcm_ba_mab?.toString() || ''}
+                        >
+                          {committee.btlhcm_ba_tenb}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -679,7 +1079,8 @@ export function DataTable<TData, TValue>({
                   btlhcm_lh_hoten: '',
                   btlhcm_lh_capbac: 0,
                   btlhcm_lh_chucvu: 0,
-                  btlhcm_lh_phongban: 0,
+                  btlhcm_lh_phong: 0,
+                  btlhcm_lh_ban: 0,
                   btlhcm_lh_donvi: 0,
                   btlhcm_lh_sdt_ds: '',
                   btlhcm_lh_sdt_qs: '',

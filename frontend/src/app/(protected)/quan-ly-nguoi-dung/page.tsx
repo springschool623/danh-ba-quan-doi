@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import {
   addRolesToUser,
   disableUser,
+  getUserRoles,
   getUsers,
   updateUser,
 } from '@/services/user.service'
@@ -51,11 +52,12 @@ export default function RolePage() {
   const [selectedRoles, setSelectedRoles] = useState<{
     [key: string]: boolean
   }>({})
-  const { hasRole } = useUserRoles()
+  const { hasAnyRole } = useUserRoles()
   useEffect(() => {
     const fetchData = async () => {
       const data = await getUsers()
       setData(data)
+      console.log('data', data)
     }
     fetchData()
   }, [])
@@ -111,28 +113,85 @@ export default function RolePage() {
   }
 
   const handleAddRole = (user: User) => {
-    console.log('Thêm vai trò cho người dùng: ', user)
     setIsAddRoleOpen(true)
     setFormData(user)
+
+    const fetchRoles = async () => {
+      try {
+        // Lấy toàn bộ roles
+        const allRoles = await getRoles()
+        setRoles(allRoles)
+
+        // Lấy roles hiện tại của user được chọn
+        const currentUserRoles = await getUserRoles(user)
+        const initialSelectedRoles: { [key: string]: boolean } = {}
+
+        allRoles.forEach((role) => {
+          const roleId = role.btlhcm_vt_mavt?.toString() ?? ''
+          // Kiểm tra xem role có trong danh sách roles hiện tại của user không
+          initialSelectedRoles[roleId] = currentUserRoles.some(
+            (userRole: Role) => userRole.btlhcm_vt_mavt?.toString() === roleId
+          )
+        })
+
+        setSelectedRoles(initialSelectedRoles)
+      } catch (error) {
+        console.error('Error fetching roles:', error)
+        toast.error('Có lỗi xảy ra khi tải danh sách vai trò!')
+      }
+    }
+
+    fetchRoles()
   }
 
   const handleAddRolesToUser = async () => {
-    console.log('Thêm vai trò cho người dùng: ', selectedRoles)
+    console.log('Cập nhật vai trò cho người dùng: ', selectedRoles)
     try {
-      const response = await addRolesToUser(
-        formData,
-        Object.keys(selectedRoles).filter((key) => selectedRoles[key])
+      // Lấy danh sách role hiện tại của người dùng
+      const currentUserRoles = await getUserRoles(formData)
+
+      // Lấy danh sách role được chọn
+      const selectedRoleIds = Object.keys(selectedRoles).filter(
+        (key) => selectedRoles[key]
       )
+
+      // Lấy danh sách role cần thêm (role mới được chọn)
+      const rolesToAdd = selectedRoleIds.filter(
+        (roleId) =>
+          !currentUserRoles.some(
+            (userRole: Role) => userRole.btlhcm_vt_mavt?.toString() === roleId
+          )
+      )
+
+      // Lấy danh sách role cần xóa (role hiện tại không còn được chọn)
+      const rolesToRemove = currentUserRoles.filter(
+        (userRole: Role) =>
+          !selectedRoleIds.includes(userRole.btlhcm_vt_mavt?.toString() ?? '')
+      )
+
+      console.log('Role cần thêm:', rolesToAdd)
+      console.log('Role cần xóa:', rolesToRemove)
+
+      // Gọi API để cập nhật role cho người dùng
+      const response = await addRolesToUser(formData, selectedRoleIds)
+
       if (response.ok) {
         setIsAddRoleOpen(false)
-        toast.success('Thêm vai trò cho người dùng thành công!')
+        toast.success('Cập nhật vai trò cho người dùng thành công!')
+
+        // Reset selectedRoles
+        setSelectedRoles({})
+
+        // Cập nhật danh sách người dùng
         const newUser = await getUsers()
         setData(newUser as User[])
       } else {
-        console.error('Error adding roles to user:', response)
+        console.error('Error updating roles for user:', response)
+        toast.error('Có lỗi xảy ra khi cập nhật vai trò!')
       }
     } catch (error) {
-      console.error('Error adding roles to user:', error)
+      console.error('Error updating roles for user:', error)
+      toast.error('Có lỗi xảy ra khi cập nhật vai trò!')
     }
   }
 
@@ -153,7 +212,10 @@ export default function RolePage() {
           handleEdit,
           handleDelete,
           handleAddRole,
-          hasRole('Quản trị viên')
+          hasAnyRole([
+            'Quản trị hệ thống (Super Admin)',
+            'Quản trị hệ thống (Admin)',
+          ])
         )}
         data={data}
         onDataChange={handleDataChange}
@@ -253,33 +315,52 @@ export default function RolePage() {
       <Dialog open={isAddRoleOpen} onOpenChange={setIsAddRoleOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Thêm vai trò cho người dùng</DialogTitle>
+            <DialogTitle>Cập nhật vai trò cho người dùng</DialogTitle>
+            <DialogDescription>
+              Bật/tắt các vai trò cho người dùng. Vai trò có badge &quot;Đã
+              có&quot; là vai trò hiện tại của người dùng.
+            </DialogDescription>
           </DialogHeader>
           <div className="border-t pt-4">
             <h5 className="text-md font-semibold mb-4">Danh sách vai trò:</h5>
-            <div className="grid grid-cols-2 gap-4">
-              {roles.map((role) => (
-                <div
-                  key={role.btlhcm_vt_mavt}
-                  className="flex items-center gap-5 my-4"
-                >
-                  <Label htmlFor={role.btlhcm_vt_mavt?.toString()}>
-                    {role.btlhcm_vt_tenvt}:
-                  </Label>
-                  <Switch
-                    id={role.btlhcm_vt_mavt?.toString() ?? ''}
-                    checked={
-                      !!selectedRoles[role.btlhcm_vt_mavt?.toString() ?? '']
-                    }
-                    onCheckedChange={(checked) => {
-                      setSelectedRoles((prev) => ({
-                        ...prev,
-                        [role.btlhcm_vt_mavt?.toString() ?? '']: checked,
-                      }))
-                    }}
-                  />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 gap-4">
+              {roles.map((role) => {
+                const roleId = role.btlhcm_vt_mavt?.toString() ?? ''
+                const isCurrentlyAssigned = !!selectedRoles[roleId]
+
+                return (
+                  <div
+                    key={role.btlhcm_vt_mavt}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Label htmlFor={roleId} className="font-medium">
+                        {role.btlhcm_vt_tenvt}
+                      </Label>
+                      {isCurrentlyAssigned && (
+                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                          Đã có
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        id={roleId}
+                        checked={!!selectedRoles[roleId]}
+                        onCheckedChange={(checked) => {
+                          setSelectedRoles((prev) => ({
+                            ...prev,
+                            [roleId]: checked,
+                          }))
+                        }}
+                      />
+                      <span className="text-sm text-gray-500">
+                        {selectedRoles[roleId] ? 'Bật' : 'Tắt'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
           <DialogFooter className="mt-4">
@@ -287,7 +368,7 @@ export default function RolePage() {
               Hủy
             </Button>
             <Button variant="default" onClick={handleAddRolesToUser}>
-              Thêm vai trò
+              Cập nhật vai trò
             </Button>
           </DialogFooter>
         </DialogContent>

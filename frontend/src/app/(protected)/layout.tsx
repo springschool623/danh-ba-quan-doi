@@ -10,7 +10,7 @@ export default function ProtectedLayout({
   return (
     <>
       <Header />
-      <main className="container mx-auto px-4 flex-1">
+      <main className="w-[1600px] mx-auto px-4 flex-1">
         <NavigationBar />
         {children}
       </main>
