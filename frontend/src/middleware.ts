@@ -22,25 +22,25 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dang-nhap', request.url))
     }
 
-    // try {
-    //   const decoded = jwtDecode<JwtPayload>(token)
-    //   const currentTime = Math.floor(Date.now() / 1000)
+    try {
+      const decoded = jwtDecode<JwtPayload>(token)
+      const currentTime = Math.floor(Date.now() / 1000)
 
-    //   if (decoded.exp < currentTime) {
-    //     console.log('Token đã hết hạn!')
-    //     // Clear expired token cookie
-    //     const response = NextResponse.redirect(
-    //       new URL('/dang-nhap', request.url)
-    //     )
-    //     response.cookies.delete('token')
-    //     return response
-    //   }
-    // } catch (error) {
-    //   console.log('Token không hợp lệ!')
-    //   const response = NextResponse.redirect(new URL('/dang-nhap', request.url))
-    //   response.cookies.delete('token')
-    //   return response
-    // }
+      if (decoded.exp < currentTime) {
+        console.log('Token đã hết hạn!')
+        // Clear expired token cookie
+        const response = NextResponse.redirect(
+          new URL('/dang-nhap', request.url)
+        )
+        response.cookies.delete('token')
+        return response
+      }
+    } catch (error) {
+      console.log('Token không hợp lệ!')
+      const response = NextResponse.redirect(new URL('/dang-nhap', request.url))
+      response.cookies.delete('token')
+      return response
+    }
   }
   return NextResponse.next()
 }
