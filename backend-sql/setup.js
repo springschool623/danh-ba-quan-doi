@@ -10,6 +10,23 @@ async function setupDatabase() {
   try {
     console.log('🔄 Đang thiết lập cơ sở dữ liệu...')
 
+    // Kiểm tra và xóa database cũ nếu tồn tại
+    const { checkDatabaseExists, dropDatabase, createDatabase } = await import(
+      './sql/database.js'
+    )
+
+    const dbExists = await checkDatabaseExists()
+    if (dbExists) {
+      console.log('🗑️ Database đã tồn tại, đang xóa...')
+      await dropDatabase()
+      console.log('✅ Database cũ đã được xóa')
+    }
+
+    // Tạo database mới
+    console.log('🏗️ Đang tạo database mới...')
+    await createDatabase()
+    console.log('✅ Database mới đã được tạo')
+
     // Đọc và thực thi schema
     const { createSchema } = await import('./sql/schema.js')
     await createSchema()
