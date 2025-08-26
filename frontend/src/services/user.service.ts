@@ -1,13 +1,20 @@
 import { User } from '@/types/users'
+import { apiUrl } from '@/lib/config'
 
 export const getUsers = async (): Promise<User[]> => {
-  const response = await fetch('http://localhost:5000/api/users')
+  const response = await fetch(apiUrl('/api/users'))
+  const data = await response.json()
+  return data
+}
+
+export const getCurrentUser = async (user: User) => {
+  const response = await fetch(apiUrl(`/api/users/${user.btlhcm_nd_mand}`))
   const data = await response.json()
   return data
 }
 
 export const addUser = async (user: User) => {
-  const response = await fetch('http://localhost:5000/api/users', {
+  const response = await fetch(apiUrl('/api/users'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,16 +30,13 @@ export const addUser = async (user: User) => {
 }
 
 export const updateUser = async (user: User) => {
-  const response = await fetch(
-    `http://localhost:5000/api/users/${user.btlhcm_nd_mand}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(user),
-    }
-  )
+  const response = await fetch(apiUrl(`/api/users/${user.btlhcm_nd_mand}`), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
+  })
   if (!response.ok) {
     throw new Error('Failed to update user')
   }
@@ -41,9 +45,9 @@ export const updateUser = async (user: User) => {
   return response
 }
 
-export const disableUser = async (user: User) => {
+export const changeUserStatus = async (user: User) => {
   const response = await fetch(
-    `http://localhost:5000/api/users/${user.btlhcm_nd_mand}/disable`,
+    apiUrl(`/api/users/${user.btlhcm_nd_mand}/change-status`),
     {
       method: 'PUT',
       headers: {
@@ -53,9 +57,9 @@ export const disableUser = async (user: User) => {
     }
   )
   if (!response.ok) {
-    throw new Error('Failed to disable user')
+    throw new Error('Failed to change user status')
   }
-  console.log('Vô hiệu hóa người dùng thành công!')
+  console.log('Thay đổi trạng thái người dùng thành công!')
 
   return response
 }
@@ -63,7 +67,7 @@ export const disableUser = async (user: User) => {
 export const addRolesToUser = async (user: User, roles: string[]) => {
   console.log('Thêm vai trò cho người dùng: ', user.btlhcm_nd_mand)
   const response = await fetch(
-    `http://localhost:5000/api/users/${user.btlhcm_nd_mand}/add-roles`,
+    apiUrl(`/api/users/${user.btlhcm_nd_mand}/add-roles`),
     {
       method: 'PUT',
       headers: {
@@ -82,7 +86,7 @@ export const addRolesToUser = async (user: User, roles: string[]) => {
 
 export const getUserRoles = async (user: User) => {
   const response = await fetch(
-    `http://localhost:5000/api/users/${user.btlhcm_nd_mand}/roles`
+    apiUrl(`/api/users/${user.btlhcm_nd_mand}/roles`)
   )
   const data = await response.json()
   return data

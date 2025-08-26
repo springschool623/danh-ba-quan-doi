@@ -1,5 +1,7 @@
+import { apiUrl } from '@/lib/config'
+
 export const userLogin = async (username: string, password: string) => {
-  const response = await fetch('http://localhost:5000/api/login', {
+  const response = await fetch(apiUrl('/api/login'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -7,12 +9,11 @@ export const userLogin = async (username: string, password: string) => {
     credentials: 'include',
     body: JSON.stringify({ username, password }),
   })
-  console.log(username)
   return response
 }
 
 export const userLogout = async () => {
-  const response = await fetch('http://localhost:5000/api/login/logout', {
+  const response = await fetch(apiUrl('/api/login/logout'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -14,41 +14,42 @@ import {
 } from '@/components/ui/navigation-menu'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { MilitaryRegion } from '@/types/militaryRegions'
-import { getMilitaryRegions } from '@/services/militaryRegion.service'
-import { getProvinces } from '@/services/province.service'
 import { getWards } from '@/services/ward.service'
-import { Province } from '@/types/provinces'
 import { Ward } from '@/types/wards'
 import { userLogout } from '@/services/login.service'
-import { useUserRoles } from '@/hooks/useUserRoles'
+import useUserRoles from '@/hooks/useUserRoles'
+import useUser from '@/hooks/useUser'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Eye, EyeOff } from 'lucide-react'
+import { updateUser } from '@/services/user.service'
+import { toast } from 'sonner'
 export function NavigationBar() {
-  const [militaryRegions, setMilitaryRegions] = useState<MilitaryRegion[]>([])
-  const [provinces, setProvinces] = useState<Province[]>([])
   const [wards, setWards] = useState<Ward[]>([])
   const [loading, setLoading] = useState(true)
-  const { hasRole } = useUserRoles()
+  const { roles, hasRole } = useUserRoles()
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [accountPassword, setAccountPassword] = useState('')
+  const user = useUser()
+
   useEffect(() => {
-    const fetchMilitaryRegions = async () => {
-      try {
-        const militaryRegions = await getMilitaryRegions()
-        setMilitaryRegions(militaryRegions)
-      } catch (error) {
-        console.error('Error fetching military regions:', error)
-      } finally {
-        setLoading(false)
-      }
+    if (isAccountOpen && accountPassword === '') {
+      setAccountPassword(user?.btlhcm_nd_matkhau ?? '')
+      setShowPassword(false)
     }
-    const fetchProvinces = async () => {
-      try {
-        const provinces = await getProvinces()
-        setProvinces(provinces)
-      } catch (error) {
-        console.error('Error fetching provinces:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  }, [isAccountOpen, accountPassword, user])
+
+  useEffect(() => {
     const fetchWards = async () => {
       try {
         const wards = await getWards()
@@ -59,10 +60,30 @@ export function NavigationBar() {
         setLoading(false)
       }
     }
-    fetchMilitaryRegions()
-    fetchProvinces()
+
     fetchWards()
   }, [])
+
+  const handleChangePassword = async () => {
+    if (!user?.btlhcm_nd_mand) return
+    try {
+      console.log('Password: ', accountPassword)
+      const res = await updateUser({
+        btlhcm_nd_mand: user.btlhcm_nd_mand,
+        btlhcm_nd_matkhau: accountPassword,
+      })
+      if (res.ok) {
+        toast.success('Cập nhật mật khẩu thành công')
+        setIsAccountOpen(false)
+        setAccountPassword(accountPassword)
+      } else {
+        toast.error('Cập nhật mật khẩu thất bại')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Có lỗi xảy ra khi cập nhật mật khẩu')
+    }
+  }
 
   // Kiểm tra vai trò của người dùng
   const isAdmin = hasRole('Quản trị hệ thống (Super Admin)')
@@ -223,6 +244,14 @@ export function NavigationBar() {
 
       {/* Nút Đăng xuất bên phải */}
       <div className="flex items-center">
+        {/* Thông tin người dùng */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAccountOpen(true)}
+        >
+          Tài khoản
+        </Button>
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -250,6 +279,77 @@ export function NavigationBar() {
           </NavigationMenuList>
         </NavigationMenu>
       </div>
+      <Dialog open={isAccountOpen} onOpenChange={setIsAccountOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Thông tin tài khoản</DialogTitle>
+            <DialogDescription>
+              Xem thông tin tài khoản hiện tại của bạn.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="account-username">Mã người dùng</Label>
+                <Input
+                  id="account-username"
+                  value={user?.btlhcm_nd_mand ?? ''}
+                  disabled
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="account-username">Mật khẩu</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    id="account-password"
+                    value={accountPassword}
+                    onChange={(e) => setAccountPassword(e.target.value)}
+                    disabled={!showPassword}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2 border-t pt-4">
+                <Label>Vai trò</Label>
+                <div className="flex flex-wrap gap-2">
+                  {roles?.length ? (
+                    roles.map((r) => (
+                      <span
+                        key={r.btlhcm_vt_mavt}
+                        className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded"
+                      >
+                        {r.btlhcm_vt_tenvt}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Không có vai trò
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleChangePassword}>
+              Thay đổi mật khẩu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -5,12 +5,25 @@ import jwt from 'jsonwebtoken'
 export const userLogin = async (req, res) => {
   try {
     const { username, password } = req.body
+
+    // Kiểm tra input có đầy đủ không
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: 'Vui lòng nhập đủ tài khoản và mật khẩu' })
+    }
+
     const result = await pool.query(
-      'SELECT nd.btlhcm_nd_mand, nd.btlhcm_nd_trangthai, vt.btlhcm_vt_mavt, vt.btlhcm_vt_tenvt FROM nguoidung nd JOIN vaitronguoidung vtnd on nd.btlhcm_nd_mand = vtnd.btlhcm_vtnd_mand JOIN vaitro vt on vt.btlhcm_vt_mavt = vtnd.btlhcm_vtnd_mavt WHERE nd.btlhcm_nd_mand = $1 AND nd.btlhcm_nd_matkhau = $2',
+      `SELECT nd.btlhcm_nd_mand, nd.btlhcm_nd_trangthai, 
+              vt.btlhcm_vt_mavt, vt.btlhcm_vt_tenvt 
+       FROM nguoidung nd 
+       JOIN vaitronguoidung vtnd 
+            ON nd.btlhcm_nd_mand = vtnd.btlhcm_vtnd_mand 
+       JOIN vaitro vt 
+            ON vt.btlhcm_vt_mavt = vtnd.btlhcm_vtnd_mavt 
+       WHERE nd.btlhcm_nd_mand = $1 AND nd.btlhcm_nd_matkhau = $2`,
       [username, password]
     )
-
-    console.log(result.rows)
 
     if (result.rows.length === 0) {
       return res
@@ -19,7 +32,7 @@ export const userLogin = async (req, res) => {
     }
 
     if (result.rows[0].btlhcm_nd_trangthai === false) {
-      return res.status(401).json({ message: 'Tài khoản đã bị vô hiệu hóa' })
+      return res.status(403).json({ message: 'Tài khoản đã bị vô hiệu hóa' })
     }
 
     // Tạo token
@@ -39,9 +52,8 @@ export const userLogin = async (req, res) => {
       expiresIn: '1h',
     })
 
-    // Gửi token qua cookie + response luôn 1 lần
     res.cookie('token', token, {
-      httpOnly: false,
+      httpOnly: true, // nên để true cho an toàn
       secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 3 * 1000, // 3 giờ

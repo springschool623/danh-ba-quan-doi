@@ -25,30 +25,14 @@ export function LoginForm({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const response = await userLogin(username, password)
     try {
+      const response = await userLogin(username, password)
+      const data = await response.json().catch(() => ({})) // phòng khi backend không có body
       if (response.status === 200) {
-        // Parse response data
-        const data = await response.json()
         console.log('Response data:', data)
 
-        // Log token nếu có
         if (data.token) {
           console.log('Token received:', data.token)
-        } else {
-          console.log('No token in response data')
-        }
-
-        // Kiểm tra cookie token
-        const cookies = document.cookie.split(';')
-        const tokenCookie = cookies.find((cookie) =>
-          cookie.trim().startsWith('token=')
-        )
-
-        if (tokenCookie) {
-          console.log('Token in cookie:', tokenCookie.split('=')[1])
-        } else {
-          console.log('No token cookie found')
         }
 
         router.push('/danh-ba')
@@ -60,22 +44,36 @@ export function LoginForm({
           },
         })
       } else if (response.status === 401) {
-        toast.error('Tên đăng nhập hoặc mật khẩu không chính xác!', {
+        toast.error(
+          data.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!',
+          {
+            duration: 3000,
+            style: {
+              background: 'oklch(50.5% 0.213 27.518)',
+              color: '#fff',
+            },
+          }
+        )
+      } else if (response.status === 403) {
+        toast.error(data.message || 'Tài khoản đã bị vô hiệu hóa!', {
           duration: 3000,
           style: {
-            background: 'oklch(50.5% 0.213 27.518)',
+            background: '#FFae22',
             color: '#fff',
           },
         })
+      } else {
+        toast.error('Lỗi không xác định!')
       }
     } catch (error) {
-      console.log(error)
+      console.error(error)
       toast.error('Lỗi khi đăng nhập! Vui lòng thử lại!')
     }
   }
+
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="w-[360px]">
+      <Card className="w-[360px] shadow-md shadow-black-800">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Đăng nhập</CardTitle>
           <CardDescription>Đăng nhập vào hệ thống</CardDescription>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getContactColumns } from '@/app/(protected)/danh-ba/columns'
 import { DataTable } from '@/app/(protected)/danh-ba/data-table'
@@ -41,11 +41,19 @@ import { Position } from '@/types/positions'
 import { Department } from '@/types/departments'
 import { Location } from '@/types/locations'
 import { toast } from 'sonner'
-import { useUserRoles } from '@/hooks/useUserRoles'
+import useUserRoles from '@/hooks/useUserRoles'
 import { Committee } from '@/types/committees'
 import { getCommittees } from '@/services/committee.service'
 
 export default function ContactPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ContactPageContent />
+    </Suspense>
+  )
+}
+
+function ContactPageContent() {
   const [data, setData] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
@@ -75,17 +83,6 @@ export default function ContactPage() {
   })
   const { hasAnyRole, roles } = useUserRoles()
   useEffect(() => {
-    // Kiểm tra cookie token
-    const cookies = document.cookie.split(';')
-    const tokenCookie = cookies.find((cookie) =>
-      cookie.trim().startsWith('token=')
-    )
-    if (tokenCookie) {
-      console.log('Token in cookie:', tokenCookie.split('=')[1])
-    } else {
-      console.log('No token cookie found')
-    }
-
     const fetchData = async () => {
       try {
         setLoading(true)
@@ -297,7 +294,6 @@ export default function ContactPage() {
             hasAnyRole([
               'Quản trị hệ thống (Super Admin)',
               'Quản trị hệ thống (Admin)',
-              'Quản trị viên (User)',
             ])
           )}
           data={data}

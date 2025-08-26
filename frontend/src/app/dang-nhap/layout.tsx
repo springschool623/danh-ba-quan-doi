@@ -1,6 +1,5 @@
 import Footer from '@/components/common/Footer'
 import { Header } from '@/components/common/Header'
-import { NavigationBar } from '@/components/common/NavigationBar'
 
 export default function LoginLayout({
   children,

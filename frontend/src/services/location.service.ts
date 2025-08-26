@@ -1,7 +1,8 @@
 import { Location } from '@/types/locations'
+import { apiUrl } from '@/lib/config'
 
 export const getLocations = async (): Promise<Location[]> => {
-  const response = await fetch('http://localhost:5000/api/locations')
+  const response = await fetch(apiUrl('/api/locations'))
   const data = await response.json()
   return data
 }

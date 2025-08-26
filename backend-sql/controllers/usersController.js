@@ -7,12 +7,30 @@ export const getAllUsers = async (req, res) => {
   res.json(result.rows)
 }
 
+export const getCurrentUser = async (req, res) => {
+  const { btlhcm_nd_mand } = req.params
+  const result = await pool.query(
+    `SELECT * FROM nguoidung WHERE btlhcm_nd_mand = $1`,
+    [btlhcm_nd_mand]
+  )
+  res.json(result.rows)
+}
+
 export const addUser = async (req, res) => {
   const { btlhcm_nd_mand, btlhcm_nd_matkhau } = req.body
   const result = await pool.query(
     `INSERT INTO nguoidung (btlhcm_nd_mand, btlhcm_nd_matkhau, btlhcm_nd_trangthai) VALUES ($1, $2, $3)`,
     [btlhcm_nd_mand, btlhcm_nd_matkhau, true]
   )
+  if (result.rowCount > 0) {
+    console.log('Thêm người dùng thành công!')
+    await pool.query(
+      `INSERT INTO vaitronguoidung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) VALUES ($1, $2)`,
+      [btlhcm_nd_mand, 3]
+    )
+  } else {
+    console.log('Thêm người dùng thất bại!')
+  }
   res.json(result.rows)
 }
 
@@ -25,14 +43,37 @@ export const updateUser = async (req, res) => {
   res.json(result.rows)
 }
 
-export const disableUser = async (req, res) => {
-  const { btlhcm_nd_mand } = req.params
-  console.log('Mã người dùng: ', btlhcm_nd_mand)
-  const result = await pool.query(
-    `UPDATE nguoidung SET btlhcm_nd_trangthai = $1 WHERE btlhcm_nd_mand = $2`,
-    [false, btlhcm_nd_mand]
-  )
-  res.json(result.rows)
+export const changeUserStatus = async (req, res) => {
+  try {
+    const { btlhcm_nd_mand } = req.params
+
+    // Lấy trạng thái hiện tại trong DB
+    const current = await pool.query(
+      `SELECT btlhcm_nd_trangthai FROM nguoidung WHERE btlhcm_nd_mand = $1`,
+      [btlhcm_nd_mand]
+    )
+
+    if (current.rows.length === 0) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại' })
+    }
+
+    const currentStatus = current.rows[0].btlhcm_nd_trangthai
+    const newStatus = !currentStatus // đảo ngược boolean
+
+    // Cập nhật lại DB
+    const result = await pool.query(
+      `UPDATE nguoidung 
+       SET btlhcm_nd_trangthai = $1 
+       WHERE btlhcm_nd_mand = $2 
+       RETURNING *`,
+      [newStatus, btlhcm_nd_mand]
+    )
+
+    res.json(result.rows[0])
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Lỗi khi thay đổi trạng thái người dùng' })
+  }
 }
 
 // Thêm nhiều vai trò cho người dùng

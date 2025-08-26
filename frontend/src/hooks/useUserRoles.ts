@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 type Role = { btlhcm_vt_mavt: number; btlhcm_vt_tenvt: string }
 type JwtPayload = { username: string; roles: Role[]; exp: number; iat: number }
 
-export function useUserRoles() {
+export default function useUserRoles() {
   const [roles, setRoles] = useState<Role[]>([])
 
   useEffect(() => {

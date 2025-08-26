@@ -1,7 +1,8 @@
 import { Contact } from '@/types/contacts'
+import { apiUrl } from '@/lib/config'
 
 export const getContacts = async (): Promise<Contact[]> => {
-  const response = await fetch('http://localhost:5000/api/contacts')
+  const response = await fetch(apiUrl('/api/contacts'))
   const data = await response.json()
   return data
 }
@@ -10,7 +11,7 @@ export const getContactsByMilitaryRegion = async (
   militaryRegionId: number
 ): Promise<Contact[]> => {
   const response = await fetch(
-    `http://localhost:5000/api/contacts/military-region?region=${militaryRegionId}`
+    apiUrl(`/api/contacts/military-region?region=${militaryRegionId}`)
   )
   const data = await response.json()
   return data
@@ -20,22 +21,20 @@ export const getContactsByProvince = async (
   provinceId: number
 ): Promise<Contact[]> => {
   const response = await fetch(
-    `http://localhost:5000/api/contacts/province?province=${provinceId}`
+    apiUrl(`/api/contacts/province?province=${provinceId}`)
   )
   const data = await response.json()
   return data
 }
 
 export const getContactsByWard = async (wardId: number): Promise<Contact[]> => {
-  const response = await fetch(
-    `http://localhost:5000/api/contacts/ward?ward=${wardId}`
-  )
+  const response = await fetch(apiUrl(`/api/contacts/ward?ward=${wardId}`))
   const data = await response.json()
   return data
 }
 
 export const addContact = async (contact: Contact): Promise<Response> => {
-  const response = await fetch('http://localhost:5000/api/contacts', {
+  const response = await fetch(apiUrl('/api/contacts'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,7 +52,7 @@ export const addContact = async (contact: Contact): Promise<Response> => {
 
 export const updateContact = async (contact: Contact): Promise<Response> => {
   const response = await fetch(
-    `http://localhost:5000/api/contacts/${contact.btlhcm_lh_malh}`,
+    apiUrl(`/api/contacts/${contact.btlhcm_lh_malh}`),
     {
       method: 'PUT',
       headers: {
@@ -75,7 +74,7 @@ export const updateContact = async (contact: Contact): Promise<Response> => {
 
 export const deleteContact = async (contact: Contact): Promise<Response> => {
   const response = await fetch(
-    `http://localhost:5000/api/contacts/${contact.btlhcm_lh_malh}`,
+    apiUrl(`/api/contacts/${contact.btlhcm_lh_malh}`),
     {
       method: 'DELETE',
     }

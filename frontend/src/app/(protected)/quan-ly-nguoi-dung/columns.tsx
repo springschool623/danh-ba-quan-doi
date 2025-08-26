@@ -115,7 +115,7 @@ export const getUserColumns = (
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDelete?.(user)}>
-                Vô hiệu hóa
+                {user.btlhcm_nd_trangthai ? 'Vô hiệu hóa' : 'Mở lại tài khoản'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

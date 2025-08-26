@@ -2,11 +2,11 @@
 import { PageBreadcrumb } from '@/components/common/PageBreadcrumb'
 import { DataTable } from './data-table'
 import { getUserColumns } from './columns'
-import { useUserRoles } from '@/hooks/useUserRoles'
-import { useEffect, useState } from 'react'
+import useUserRoles from '@/hooks/useUserRoles'
+import { useEffect, useState, Suspense } from 'react'
 import {
   addRolesToUser,
-  disableUser,
+  changeUserStatus,
   getUserRoles,
   getUsers,
   updateUser,
@@ -24,13 +24,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import {
-  Select,
-  SelectItem,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
 import { getRoles } from '@/services/role.service'
 import { Role } from '@/types/roles'
 import { Switch } from '@/components/ui/switch'
@@ -94,21 +88,17 @@ export default function RolePage() {
     setFormData(user)
     setIsDeleteOpen(true)
   }
-  const handleDataChange = (newData: User[]) => {
-    setData(newData)
-  }
   const handleDeleteConfirm = async (user: User) => {
     try {
-      console.log('Mã người dùng: ', user)
-      const response = await disableUser(user)
+      const response = await changeUserStatus(user)
       if (response.ok) {
         setIsDeleteOpen(false)
-        toast.success('Vô hiệu hóa người dùng thành công!')
+        toast.success('Thay đổi trạng thái người dùng thành công!')
         const newUser = await getUsers()
         setData(newUser as User[])
       }
     } catch (error) {
-      console.error('Error disabling user:', error)
+      console.error('Error changing user status:', error)
     }
   }
 
@@ -205,7 +195,9 @@ export default function RolePage() {
 
   return (
     <>
-      <PageBreadcrumb label="Quản lý Người dùng (Quản trị hệ thống)" />
+      <Suspense fallback={<div>Loading...</div>}>
+        <PageBreadcrumb label="Quản lý Người dùng (Quản trị hệ thống)" />
+      </Suspense>
 
       <DataTable
         columns={getUserColumns(
@@ -218,7 +210,6 @@ export default function RolePage() {
           ])
         )}
         data={data}
-        onDataChange={handleDataChange}
       />
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
@@ -294,9 +285,15 @@ export default function RolePage() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Vô hiệu hóa người dùng</DialogTitle>
+            <DialogTitle>
+              {formData.btlhcm_nd_trangthai
+                ? 'Vô hiệu hóa người dùng'
+                : 'Mở lại tài khoản người dùng'}
+            </DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn vô hiệu hóa người dùng này không?
+              {formData.btlhcm_nd_trangthai
+                ? 'Bạn có chắc chắn muốn vô hiệu hóa người dùng này không?'
+                : 'Bạn có chắc chắn muốn mở lại tài khoản cho người dùng này không?'}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
@@ -304,10 +301,12 @@ export default function RolePage() {
               Hủy
             </Button>
             <Button
-              variant="destructive"
+              variant={formData.btlhcm_nd_trangthai ? 'destructive' : 'edit'}
               onClick={() => handleDeleteConfirm(formData)}
             >
-              Vô hiệu hóa người dùng
+              {formData.btlhcm_nd_trangthai
+                ? 'Vô hiệu hóa người dùng'
+                : 'Mở lại tài khoản'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -367,7 +366,7 @@ export default function RolePage() {
             <Button variant="default" onClick={() => setIsAddRoleOpen(false)}>
               Hủy
             </Button>
-            <Button variant="default" onClick={handleAddRolesToUser}>
+            <Button variant="edit" onClick={handleAddRolesToUser}>
               Cập nhật vai trò
             </Button>
           </DialogFooter>

@@ -40,19 +40,17 @@ import { addUser, getUsers } from '@/services/user.service'
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  onDataChange?: (newData: TData[]) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  onDataChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing] = useState(false)
   const [editingData, setEditingData] = useState<
     Record<string, Record<string, unknown>>
   >({})
