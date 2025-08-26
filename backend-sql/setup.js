@@ -48,7 +48,5 @@ export default async function setupDatabase() {
   } catch (error) {
     console.error('❌ Lỗi khi thiết lập cơ sở dữ liệu:', error)
     process.exit(1)
-  } finally {
-    await pool.end()
   }
 }
