@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-async function setupDatabase() {
+export default async function setupDatabase() {
   try {
     console.log('🔄 Đang thiết lập cơ sở dữ liệu...')
 
@@ -52,5 +52,3 @@ async function setupDatabase() {
     await pool.end()
   }
 }
-
-setupDatabase()

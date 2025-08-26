@@ -14,6 +14,7 @@ import locationsRoutes from './routes/locationsRoute.js'
 import rolesRoutes from './routes/rolesRoute.js'
 import usersRoutes from './routes/usersRoute.js'
 import { fileURLToPath } from 'url'
+import setupDatabase from './setup.js'
 
 dotenv.config() // load .env
 
@@ -45,10 +46,28 @@ app.get('/', (req, res) => {
 })
 
 // Export the app and start function
-export const startServer = () => {
-  app.listen(port, () => {
-    console.log(`Server listening on port ${port}`)
-  })
+export const startServer = async () => {
+  try {
+    // Setup database before starting server
+    setupDatabase()
+
+    // Start server after database is ready
+    app.listen(port, () => {
+      console.log(`🚀 Server đang chạy trên port ${port}`)
+      console.log('\n📋 Thông tin hệ thống phân quyền:')
+      console.log('   - Super Admin: Tất cả quyền')
+      console.log(
+        '   - Data Entry: Quản lý contacts (view, edit, import, export)'
+      )
+      console.log('   - Auditor: Chỉ xem dữ liệu')
+      console.log(
+        '   - Officer Account Manager: Quản lý tài khoản và phân quyền'
+      )
+    })
+  } catch (error) {
+    console.error('❌ Không thể khởi động server:', error)
+    process.exit(1)
+  }
 }
 
 // Only start the server if this file is run directly
