@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
         return response
       }
     } catch (error) {
-      console.log('Token không hợp lệ!')
+      console.log('Token không hợp lệ!', error)
       const response = NextResponse.redirect(new URL('/dang-nhap', request.url))
       response.cookies.delete('token')
       return response
