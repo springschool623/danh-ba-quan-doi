@@ -13,10 +13,12 @@ import committeesRoutes from './routes/committeesRoute.js'
 import locationsRoutes from './routes/locationsRoute.js'
 import rolesRoutes from './routes/rolesRoute.js'
 import usersRoutes from './routes/usersRoute.js'
+import { fileURLToPath } from 'url'
 
 dotenv.config() // load .env
 
 const app = express()
+const port = process.env.PORT || 5000
 app.use(
   cors({
     origin: 'http://localhost:3000',
@@ -37,11 +39,21 @@ app.use('/api/committees', committeesRoutes)
 app.use('/api/locations', locationsRoutes)
 app.use('/api/roles', rolesRoutes)
 app.use('/api/users', usersRoutes)
+
 app.get('/', (req, res) => {
   res.send(`Server running on port ${process.env.PORT}`)
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`)
-})
+// Export the app and start function
+export const startServer = () => {
+  app.listen(port, () => {
+    console.log(`Server listening on port ${port}`)
+  })
+}
+
+// Only start the server if this file is run directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startServer()
+}
+
+export default app
