@@ -73,6 +73,10 @@ export const getContactColumns = (
       header: 'Đơn vị',
     },
     {
+      accessorKey: 'btlhcm_dv_diachi',
+      header: 'Địa chỉ',
+    },
+    {
       accessorKey: 'btlhcm_lh_sdt_ds',
       header: 'SĐT Dân sự',
     },

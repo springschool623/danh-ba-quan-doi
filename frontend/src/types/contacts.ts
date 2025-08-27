@@ -18,4 +18,5 @@ export type Contact = {
   btlhcm_tt_tentt?: string
   btlhcm_qk_tenqk?: string
   btlhcm_px_tenpx?: string
+  btlhcm_dv_diachi?: string
 }
