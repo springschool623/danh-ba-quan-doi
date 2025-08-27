@@ -22,7 +22,9 @@ const app = express()
 const port = process.env.PORT || 5000
 app.use(
   cors({
-    origin: 'https://danh-ba-quan-doi.onrender.com',
+    origin: 
+    // 'http://localhost:3000',
+    'https://danh-ba-quan-doi.onrender.com',
     credentials: true,
   })
 )

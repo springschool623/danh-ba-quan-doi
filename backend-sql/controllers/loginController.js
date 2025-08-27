@@ -48,15 +48,17 @@ export const userLogin = async (req, res) => {
       })
     }
 
-    const token = jwt.sign({ username, roles }, process.env.JWT_SECRET_KEY, {
+    const token = jwt.sign({ username, password, roles }, process.env.JWT_SECRET_KEY, {
       expiresIn: '1h',
     })
 
+    console.log(token)
+
     res.cookie('token', token, {
-      httpOnly: true, // nên để true cho an toàn
+      httpOnly: true,
       secure: false,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 3 * 1000, // 3 giờ
+      maxAge: 60 * 60 * 3 * 1000,
     })
 
     return res.status(200).json({

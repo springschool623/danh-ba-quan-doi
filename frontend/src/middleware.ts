@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
     request.nextUrl.pathname === '/quan-ly-nguoi-dung'
   ) {
     const token = request.cookies.get('token')?.value
-
+    console.log('Token:', token)
     if (!token) {
       console.log('Chưa đăng nhập!')
       return NextResponse.redirect(new URL('/dang-nhap', request.url))
@@ -25,6 +25,8 @@ export function middleware(request: NextRequest) {
     try {
       const decoded = jwtDecode<JwtPayload>(token)
       const currentTime = Math.floor(Date.now() / 1000)
+
+      console.log(decoded)
 
       if (decoded.exp < currentTime) {
         console.log('Token đã hết hạn!')

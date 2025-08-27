@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import Link from 'next/link'
+import * as React from "react";
+import Link from "next/link";
 
 import {
   NavigationMenu,
@@ -11,15 +11,15 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
-import { useState } from 'react'
-import { useEffect } from 'react'
-import { getWards } from '@/services/ward.service'
-import { Ward } from '@/types/wards'
-import { userLogout } from '@/services/login.service'
-import useUserRoles from '@/hooks/useUserRoles'
-import useUser from '@/hooks/useUser'
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/navigation-menu";
+import { useState } from "react";
+import { useEffect } from "react";
+import { getWards } from "@/services/ward.service";
+import { Ward } from "@/types/wards";
+import { userLogout } from "@/services/login.service";
+import useUserRoles from "@/hooks/useUserRoles";
+import useUser from "@/hooks/useUser";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -27,66 +27,67 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Eye, EyeOff } from 'lucide-react'
-import { updateUser } from '@/services/user.service'
-import { toast } from 'sonner'
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Eye, EyeOff } from "lucide-react";
+import { updateUser } from "@/services/user.service";
+import { toast } from "sonner";
 export function NavigationBar() {
-  const [wards, setWards] = useState<Ward[]>([])
-  const [loading, setLoading] = useState(true)
-  const { roles, hasRole } = useUserRoles()
-  const [isAccountOpen, setIsAccountOpen] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [accountPassword, setAccountPassword] = useState('')
-  const user = useUser()
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { roles, hasRole } = useUserRoles();
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [accountPassword, setAccountPassword] = useState("");
+  const user = useUser();
 
   useEffect(() => {
-    if (isAccountOpen && accountPassword === '') {
-      setAccountPassword(user?.btlhcm_nd_matkhau ?? '')
-      setShowPassword(false)
+    if (isAccountOpen && accountPassword === "") {
+      setAccountPassword(user?.btlhcm_nd_matkhau ?? "");
+      setShowPassword(false);
     }
-  }, [isAccountOpen, accountPassword, user])
+  }, [isAccountOpen, accountPassword, user]);
 
   useEffect(() => {
+    console.log("Navbar user: ", user);
     const fetchWards = async () => {
       try {
-        const wards = await getWards()
-        setWards(wards)
+        const wards = await getWards();
+        setWards(wards);
       } catch (error) {
-        console.error('Error fetching wards:', error)
+        console.error("Error fetching wards:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchWards()
-  }, [])
+    fetchWards();
+  }, []);
 
   const handleChangePassword = async () => {
-    if (!user?.btlhcm_nd_mand) return
+    if (!user?.btlhcm_nd_mand) return;
     try {
-      console.log('Password: ', accountPassword)
+      console.log("Password: ", accountPassword);
       const res = await updateUser({
         btlhcm_nd_mand: user.btlhcm_nd_mand,
         btlhcm_nd_matkhau: accountPassword,
-      })
+      });
       if (res.ok) {
-        toast.success('Cập nhật mật khẩu thành công')
-        setIsAccountOpen(false)
-        setAccountPassword(accountPassword)
+        toast.success("Cập nhật mật khẩu thành công");
+        setIsAccountOpen(false);
+        setAccountPassword(accountPassword);
       } else {
-        toast.error('Cập nhật mật khẩu thất bại')
+        toast.error("Cập nhật mật khẩu thất bại");
       }
     } catch (error) {
-      console.error(error)
-      toast.error('Có lỗi xảy ra khi cập nhật mật khẩu')
+      console.error(error);
+      toast.error("Có lỗi xảy ra khi cập nhật mật khẩu");
     }
-  }
+  };
 
   // Kiểm tra vai trò của người dùng
-  const isAdmin = hasRole('Quản trị hệ thống (Super Admin)')
+  const isAdmin = hasRole("Quản trị hệ thống (Super Admin)");
 
   return (
     <div className="flex justify-between items-center py-4 border-b border-gray-200">
@@ -262,13 +263,13 @@ export function NavigationBar() {
                 <Link
                   href="/"
                   onClick={async (e) => {
-                    e.preventDefault()
+                    e.preventDefault();
                     try {
-                      await userLogout()
-                      localStorage.removeItem('token')
-                      window.location.href = '/dang-nhap'
+                      await userLogout();
+                      localStorage.removeItem("token");
+                      window.location.href = "/dang-nhap";
                     } catch (error) {
-                      console.error('Logout error:', error)
+                      console.error("Logout error:", error);
                     }
                   }}
                 >
@@ -293,7 +294,7 @@ export function NavigationBar() {
                 <Label htmlFor="account-username">Mã người dùng</Label>
                 <Input
                   id="account-username"
-                  value={user?.btlhcm_nd_mand ?? ''}
+                  value={user?.btlhcm_nd_mand ?? ""}
                   disabled
                 />
               </div>
@@ -301,7 +302,7 @@ export function NavigationBar() {
                 <Label htmlFor="account-username">Mật khẩu</Label>
                 <div className="relative">
                   <Input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     id="account-password"
                     value={accountPassword}
                     onChange={(e) => setAccountPassword(e.target.value)}
@@ -351,5 +352,5 @@ export function NavigationBar() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

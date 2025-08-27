@@ -8,10 +8,8 @@ export default function useUserRoles() {
   const [roles, setRoles] = useState<Role[]>([])
 
   useEffect(() => {
-    const token = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('token='))
-      ?.split('=')[1]
+    const token = localStorage.getItem("token")
+
 
     if (!token) return
 
