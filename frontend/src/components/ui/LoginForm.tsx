@@ -34,9 +34,9 @@ export function LoginForm({
         if (data.token) {
           console.log("Token received:", data.token);
           localStorage.setItem("token", data.token);
+          router.push("/danh-ba");
         }
 
-        router.push("/danh-ba");
         toast.success("Đăng nhập thành công!", {
           duration: 3000,
           style: {
