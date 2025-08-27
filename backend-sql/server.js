@@ -19,7 +19,7 @@ dotenv.config() // load .env
 const app = express()
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://danh-ba-quan-doi.onrender.com',
     credentials: true,
   })
 )
