@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: 
     // 'http://localhost:3000',
-    'https://danh-ba-quan-doi.onrender.com',
+    'https://danh-ba-quan-doi.vercel.app',
     credentials: true,
   })
 )
