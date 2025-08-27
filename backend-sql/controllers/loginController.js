@@ -56,7 +56,7 @@ export const userLogin = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 3 * 1000,
     })
@@ -77,7 +77,7 @@ export const userLogin = async (req, res) => {
 export const userLogout = async (req, res) => {
   res.clearCookie('token', {
     httpOnly: false,
-    secure: false,
+    secure: true,
     sameSite: 'lax',
   })
   return res.status(200).json({ message: 'Đăng xuất thành công' })
