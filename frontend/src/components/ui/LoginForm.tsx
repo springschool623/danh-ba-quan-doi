@@ -34,6 +34,7 @@ export function LoginForm({
         if (data.token) {
           console.log("Token received:", data.token);
           localStorage.setItem("token", data.token);
+          console.log("pushing to /danh-ba");
           router.push("/danh-ba");
         }
 
