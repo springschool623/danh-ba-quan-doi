@@ -7,6 +7,8 @@ import {
   addContact,
   updateContact,
   deleteContact,
+  exportExcel,
+  exportVcard,
 } from '../controllers/contactsController.js'
 
 const router = express.Router()
@@ -18,5 +20,6 @@ router.get('/ward', getContactsByWard)
 router.post('/', addContact)
 router.put('/:btlhcm_lh_malh', updateContact)
 router.delete('/:btlhcm_lh_malh', deleteContact)
-
+router.get('/export-excel', exportExcel)
+router.get('/export-vcard', exportVcard)
 export default router

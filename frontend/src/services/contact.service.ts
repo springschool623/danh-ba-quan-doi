@@ -81,3 +81,21 @@ export const deleteContact = async (contact: Contact): Promise<Response> => {
   )
   return response
 }
+
+export const exportExcel = async (): Promise<Response> => {
+  const response = await fetch(apiUrl('/api/contacts/export-excel'))
+  if (!response.ok) {
+    throw new Error('Xuất CSV thất bại')
+  }
+  window.location.href = apiUrl('/api/contacts/export-excel')
+  return response
+}
+
+export const exportVcard = async (): Promise<Response> => {
+  const response = await fetch(apiUrl('/api/contacts/export-vcard'))
+  if (!response.ok) {
+    throw new Error('Xuất VCard thất bại')
+  }
+  window.location.href = apiUrl('/api/contacts/export-vcard')
+  return response
+}
