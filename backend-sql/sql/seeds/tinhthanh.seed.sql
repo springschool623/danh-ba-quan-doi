@@ -3,8 +3,8 @@
 -- =====================================================
 
 -- Dữ liệu mẫu bảng TinhThanh
-INSERT INTO TinhThanh (btlhcm_tt_matt, btlhcm_tt_quankhu, btlhcm_tt_tentt, btlhcm_tt_mota, btlhcm_tt_ngaytao, btlhcm_tt_ngaycapnhat) VALUES
-(1, 7, 'TP.HCM', 'Thành phố Hồ Chí Minh', NOW(), NOW());
+INSERT INTO TinhThanh (btlhcm_tt_quankhu, btlhcm_tt_tentt, btlhcm_tt_mota, btlhcm_tt_ngaytao, btlhcm_tt_ngaycapnhat) VALUES
+(7, 'TP.HCM', 'Thành phố Hồ Chí Minh', NOW(), NOW());
 
 -- Thông báo hoàn thành
 SELECT 'TinhThanh seed data inserted successfully!' as status;
