@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,10 +10,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Contact } from '@/types/contacts'
-import { formatDate } from '@/lib/utils'
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Contact } from "@/types/contacts";
+import { formatDate } from "@/lib/utils";
 
 export const getContactColumns = (
   onEdit: (contact: Contact) => void,
@@ -22,12 +22,12 @@ export const getContactColumns = (
 ): ColumnDef<Contact>[] => {
   const columns: ColumnDef<Contact>[] = [
     {
-      id: 'select',
+      id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
+            (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -44,66 +44,70 @@ export const getContactColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'btlhcm_lh_malh',
-      header: 'STT',
+      accessorKey: "btlhcm_lh_malh",
+      header: "STT",
       cell: ({ row }) => row.index + 1,
     },
     {
-      accessorKey: 'btlhcm_lh_hoten',
-      header: 'Họ tên',
+      accessorKey: "btlhcm_lh_hoten",
+      header: "Họ tên",
     },
     {
-      accessorKey: 'btlhcm_cb_tencb',
-      header: 'Cấp Bậc',
+      accessorKey: "btlhcm_cb_tencb",
+      header: "Cấp Bậc",
     },
     {
-      accessorKey: 'btlhcm_cv_tencv',
-      header: 'Chức vụ',
+      accessorKey: "btlhcm_cv_tencv",
+      header: "Chức vụ",
     },
     {
-      accessorKey: 'btlhcm_ba_tenb',
-      header: 'Ban',
+      accessorKey: "btlhcm_ba_tenb",
+      header: "Ban",
     },
     {
-      accessorKey: 'btlhcm_pb_tenpb',
-      header: 'Phòng',
+      accessorKey: "btlhcm_pb_tenpb",
+      header: "Phòng",
     },
     {
-      accessorKey: 'btlhcm_dv_tendv',
-      header: 'Đơn vị',
+      accessorKey: "btlhcm_dv_tendv",
+      header: "Đơn vị",
     },
     {
-      accessorKey: 'btlhcm_lh_sdt_ds',
-      header: 'SĐT Dân sự',
+      accessorKey: "btlhcm_dv_diachi",
+      header: "Địa chỉ",
     },
     {
-      accessorKey: 'btlhcm_lh_sdt_qs',
-      header: 'SĐT Quân sự',
+      accessorKey: "btlhcm_lh_sdt_ds",
+      header: "SĐT Dân sự",
     },
     {
-      accessorKey: 'btlhcm_lh_sdt_dd',
-      header: 'SĐT Di động',
+      accessorKey: "btlhcm_lh_sdt_qs",
+      header: "SĐT Quân sự",
     },
     {
-      accessorKey: 'btlhcm_lh_ngaytao',
-      header: 'Ngày tạo',
+      accessorKey: "btlhcm_lh_sdt_dd",
+      header: "SĐT Di động",
+    },
+    {
+      accessorKey: "btlhcm_lh_ngaytao",
+      header: "Ngày tạo",
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaytao') as string),
+        formatDate(row.getValue("btlhcm_lh_ngaytao") as string),
     },
     {
-      accessorKey: 'btlhcm_lh_ngaycapnhat',
-      header: 'Ngày cập nhật',
+      accessorKey: "btlhcm_lh_ngaycapnhat",
+      header: "Ngày cập nhật",
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaycapnhat') as string),
+        formatDate(row.getValue("btlhcm_lh_ngaycapnhat") as string),
     },
-  ]
+  ];
 
   if (hasRole) {
     columns.push({
-      id: 'actions',
-      header: 'Hành động',
+      id: "actions",
+      header: "Hành động",
       cell: ({ row }) => {
-        const contact = row.original
+        const contact = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -123,10 +127,10 @@ export const getContactColumns = (
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
-    })
+    });
   }
 
-  return columns
-}
+  return columns;
+};

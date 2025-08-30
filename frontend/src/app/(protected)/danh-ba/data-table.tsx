@@ -1,8 +1,9 @@
-'use client'
+"use client";
 
 import {
   ColumnDef,
   ColumnFiltersState,
+  FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -11,7 +12,7 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
-} from '@tanstack/react-table'
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -20,11 +21,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '../../../components/ui/button'
-import { useEffect, useMemo, useState } from 'react'
-import { Input } from '../../../components/ui/input'
-import { FilterIcon, Loader2, MinusIcon } from 'lucide-react'
+} from "@/components/ui/table";
+import { Button } from "../../../components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import { Input } from "../../../components/ui/input";
+import { FilterIcon, Loader2, MinusIcon } from "lucide-react";
 import {
   Dialog,
   DialogFooter,
@@ -32,34 +33,34 @@ import {
   DialogTitle,
   DialogContent,
   DialogHeader,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { addContact, getContacts } from '@/services/contact.service'
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { addContact, getContacts } from "@/services/contact.service";
 import {
   Select,
   SelectItem,
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { getLocations } from '@/services/location.service'
-import { Location } from '@/types/locations'
-import { Department } from '@/types/departments'
-import { Rank } from '@/types/ranks'
-import { Position } from '@/types/positions'
-import { getDepartments } from '@/services/department.service'
-import { getRanks } from '@/services/rank.service'
-import { getPositions } from '@/services/position.service'
-import { toast } from 'sonner'
-import { Committee } from '@/types/committees'
-import { getCommittees } from '@/services/committee.service'
+} from "@/components/ui/select";
+import { getLocations } from "@/services/location.service";
+import { Location } from "@/types/locations";
+import { Department } from "@/types/departments";
+import { Rank } from "@/types/ranks";
+import { Position } from "@/types/positions";
+import { getDepartments } from "@/services/department.service";
+import { getRanks } from "@/services/rank.service";
+import { getPositions } from "@/services/position.service";
+import { toast } from "sonner";
+import { Committee } from "@/types/committees";
+import { getCommittees } from "@/services/committee.service";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  onDataChange?: (newData: TData[]) => void
-  selectedRegion?: string
-  userRole?: string
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  onDataChange?: (newData: TData[]) => void;
+  selectedRegion?: string;
+  userRole?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -68,56 +69,57 @@ export function DataTable<TData, TValue>({
   selectedRegion,
   userRole,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [isEditing] = useState(false)
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [isEditing] = useState(false);
   const [editingData, setEditingData] = useState<
     Record<string, Record<string, unknown>>
-  >({})
+  >({});
   const [editingCells, setEditingCells] = useState<Record<string, Set<string>>>(
     {}
-  )
-  const [tableData, setTableData] = useState<TData[]>(data)
-  const [isAddContactOpen, setIsAddContactOpen] = useState(false)
-  const [locations, setLocations] = useState<Location[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [committees, setCommittees] = useState<Committee[]>([])
-  const [ranks, setRanks] = useState<Rank[]>([])
-  const [positions, setPositions] = useState<Position[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [showFilter, setShowFilter] = useState(false)
+  );
+  const [tableData, setTableData] = useState<TData[]>(data);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [committees, setCommittees] = useState<Committee[]>([]);
+  const [ranks, setRanks] = useState<Rank[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
   const [formData, setFormData] = useState({
-    btlhcm_lh_hoten: '',
+    btlhcm_lh_hoten: "",
     btlhcm_lh_capbac: 0,
     btlhcm_lh_chucvu: 0,
     btlhcm_lh_phong: 0,
     btlhcm_lh_ban: 0,
     btlhcm_lh_donvi: 0,
-    btlhcm_lh_sdt_ds: '',
-    btlhcm_lh_sdt_qs: '',
-    btlhcm_lh_sdt_dd: '',
+    btlhcm_lh_sdt_ds: "",
+    btlhcm_lh_sdt_qs: "",
+    btlhcm_lh_sdt_dd: "",
     btlhcm_lh_ngaytao: new Date(),
     btlhcm_lh_ngaycapnhat: new Date(),
-  })
+  });
 
   // Update table data when prop data changes
   useEffect(() => {
-    let filteredData = data
+    let filteredData = data;
 
     // Filter out contacts from "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
-    if (userRole === 'Quản trị viên (User)') {
+    if (userRole === "Quản trị viên (User)") {
       filteredData = data.filter((contact: TData) => {
         // Check if contact belongs to the restricted department
         // "Phòng Thủ trưởng Bộ Tư Lệnh" has ID 1
-        const contactData = contact as Record<string, unknown>
-        return (contactData.btlhcm_lh_phong as number) !== 1
-      })
+        const contactData = contact as Record<string, unknown>;
+        return (contactData.btlhcm_lh_phong as number) !== 1;
+      });
     }
 
-    setTableData(filteredData)
-  }, [data, userRole])
+    setTableData(filteredData);
+  }, [data, userRole]);
 
   // const handleToggleEdit = () => {
   //   if (isEditing) {
@@ -154,18 +156,18 @@ export function DataTable<TData, TValue>({
   const handleCellClick = (rowId: string, columnId: string) => {
     if (
       !isEditing ||
-      columnId === 'select' ||
-      columnId === 'actions' ||
-      columnId === 'btlhcm_lh_malh'
+      columnId === "select" ||
+      columnId === "actions" ||
+      columnId === "btlhcm_lh_malh"
     ) {
-      return
+      return;
     }
 
     setEditingCells((prev) => ({
       ...prev,
       [rowId]: new Set([...(prev[rowId] || []), columnId]),
-    }))
-  }
+    }));
+  };
 
   const handleInputChange = (rowId: string, field: string, value: unknown) => {
     setEditingData((prev) => ({
@@ -174,151 +176,166 @@ export function DataTable<TData, TValue>({
         ...prev[rowId],
         [field]: value,
       },
-    }))
-  }
+    }));
+  };
 
   const isCellEditing = (rowId: string, columnId: string) => {
-    return isEditing && editingCells[rowId]?.has(columnId)
-  }
+    return isEditing && editingCells[rowId]?.has(columnId);
+  };
 
   const handleAddContact = async () => {
     try {
-      const response = await addContact(formData)
+      const response = await addContact(formData);
 
       if (response.ok) {
-        toast.success('Thêm danh bạ thành công!', {
+        toast.success("Thêm danh bạ thành công!", {
           duration: 2000,
-          position: 'top-right',
-        })
-        setIsAddContactOpen(false)
+          position: "top-right",
+        });
+        setIsAddContactOpen(false);
 
         setFormData({
-          btlhcm_lh_hoten: '',
+          btlhcm_lh_hoten: "",
           btlhcm_lh_capbac: 0,
           btlhcm_lh_chucvu: 0,
           btlhcm_lh_phong: 0,
           btlhcm_lh_ban: 0,
           btlhcm_lh_donvi: 0,
-          btlhcm_lh_sdt_ds: '',
-          btlhcm_lh_sdt_qs: '',
-          btlhcm_lh_sdt_dd: '',
+          btlhcm_lh_sdt_ds: "",
+          btlhcm_lh_sdt_qs: "",
+          btlhcm_lh_sdt_dd: "",
           btlhcm_lh_ngaytao: new Date(),
           btlhcm_lh_ngaycapnhat: new Date(),
-        })
-        setIsLoading(true)
-        const newContact = await getContacts()
-        setTableData(newContact as TData[])
+        });
+        setIsLoading(true);
+        const newContact = await getContacts();
+        setTableData(newContact as TData[]);
       }
     } catch (error) {
-      console.error('Lỗi khi thêm danh bạ:', error)
-      toast.error('Có lỗi xảy ra khi thêm danh bạ!', {
+      console.error("Lỗi khi thêm danh bạ:", error);
+      toast.error("Có lỗi xảy ra khi thêm danh bạ!", {
         duration: 2000,
-        position: 'top-right',
-      })
+        position: "top-right",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchLocations = async () => {
-      const locations = await getLocations()
-      setLocations(locations)
-    }
+      const locations = await getLocations();
+      setLocations(locations);
+    };
     const fetchDepartments = async () => {
-      const departments = await getDepartments()
-      setDepartments(departments)
-    }
+      const departments = await getDepartments();
+      setDepartments(departments);
+    };
     const fetchRanks = async () => {
-      const ranks = await getRanks()
-      setRanks(ranks)
-    }
+      const ranks = await getRanks();
+      setRanks(ranks);
+    };
     const fetchPositions = async () => {
-      const positions = await getPositions()
-      setPositions(positions)
-    }
+      const positions = await getPositions();
+      setPositions(positions);
+    };
     const fetchCommittees = async () => {
-      const committees = await getCommittees()
-      setCommittees(committees)
-    }
-    fetchLocations()
-    fetchDepartments()
-    fetchPositions()
-    fetchRanks()
-    fetchCommittees()
-  }, [])
+      const committees = await getCommittees();
+      setCommittees(committees);
+    };
+    fetchLocations();
+    fetchDepartments();
+    fetchPositions();
+    fetchRanks();
+    fetchCommittees();
+  }, []);
 
   useEffect(() => {
     if (!isAddContactOpen) {
       setFormData({
-        btlhcm_lh_hoten: '',
+        btlhcm_lh_hoten: "",
         btlhcm_lh_capbac: 0,
         btlhcm_lh_chucvu: 0,
         btlhcm_lh_phong: 0,
         btlhcm_lh_ban: 0,
         btlhcm_lh_donvi: 0,
-        btlhcm_lh_sdt_ds: '',
-        btlhcm_lh_sdt_qs: '',
-        btlhcm_lh_sdt_dd: '',
+        btlhcm_lh_sdt_ds: "",
+        btlhcm_lh_sdt_qs: "",
+        btlhcm_lh_sdt_dd: "",
         btlhcm_lh_ngaytao: new Date(),
         btlhcm_lh_ngaycapnhat: new Date(),
-      })
+      });
     }
-  }, [isAddContactOpen])
+  }, [isAddContactOpen]);
 
   // Allowed option sets by selectedRegion (phường)
   const regionScopedRows = useMemo(() => {
-    const rows = (tableData as unknown as Record<string, unknown>[]) || []
-    if (!selectedRegion) return rows
+    const rows = (tableData as unknown as Record<string, unknown>[]) || [];
+    if (!selectedRegion) return rows;
     return rows.filter(
-      (r) => (r['btlhcm_px_tenpx'] as string | undefined) === selectedRegion
-    )
-  }, [tableData, selectedRegion])
+      (r) => (r["btlhcm_px_tenpx"] as string | undefined) === selectedRegion
+    );
+  }, [tableData, selectedRegion]);
 
   const allowedRankNames = useMemo(() => {
-    const s = new Set<string>()
+    const s = new Set<string>();
     regionScopedRows.forEach((r) => {
-      const name = r['btlhcm_cb_tencb'] as string | undefined
-      if (name) s.add(name)
-    })
-    return s
-  }, [regionScopedRows])
+      const name = r["btlhcm_cb_tencb"] as string | undefined;
+      if (name) s.add(name);
+    });
+    return s;
+  }, [regionScopedRows]);
 
   const allowedPositionNames = useMemo(() => {
-    const s = new Set<string>()
+    const s = new Set<string>();
     regionScopedRows.forEach((r) => {
-      const name = r['btlhcm_cv_tencv'] as string | undefined
-      if (name) s.add(name)
-    })
-    return s
-  }, [regionScopedRows])
+      const name = r["btlhcm_cv_tencv"] as string | undefined;
+      if (name) s.add(name);
+    });
+    return s;
+  }, [regionScopedRows]);
 
   const allowedDepartmentNames = useMemo(() => {
-    const s = new Set<string>()
+    const s = new Set<string>();
     regionScopedRows.forEach((r) => {
-      const name = r['btlhcm_pb_tenpb'] as string | undefined
-      if (name) s.add(name)
-    })
-    return s
-  }, [regionScopedRows])
+      const name = r["btlhcm_pb_tenpb"] as string | undefined;
+      if (name) s.add(name);
+    });
+    return s;
+  }, [regionScopedRows]);
 
   const allowedCommitteeNames = useMemo(() => {
-    const s = new Set<string>()
+    const s = new Set<string>();
     regionScopedRows.forEach((r) => {
-      const name = r['btlhcm_ba_tenb'] as string | undefined
-      if (name) s.add(name)
-    })
-    return s
-  }, [regionScopedRows])
+      const name = r["btlhcm_ba_tenb"] as string | undefined;
+      if (name) s.add(name);
+    });
+    return s;
+  }, [regionScopedRows]);
 
   const allowedUnitNames = useMemo(() => {
-    const s = new Set<string>()
+    const s = new Set<string>();
     regionScopedRows.forEach((r) => {
-      const name = r['btlhcm_dv_tendv'] as string | undefined
-      if (name) s.add(name)
-    })
-    return s
-  }, [regionScopedRows])
+      const name = r["btlhcm_dv_tendv"] as string | undefined;
+      if (name) s.add(name);
+    });
+    return s;
+  }, [regionScopedRows]);
+
+  // Global filter across Họ tên and Đơn vị (OR logic)
+  const nameOrUnitGlobalFilter: FilterFn<TData> = (row, _columnId, value) => {
+    const query = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (!query) return true;
+    const r = row.original as Record<string, unknown>;
+    const fields = ["btlhcm_lh_hoten", "btlhcm_dv_tendv"];
+    return fields.some((f) =>
+      String(r[f] ?? "")
+        .toLowerCase()
+        .includes(query)
+    );
+  };
 
   const table = useReactTable({
     data: tableData,
@@ -329,15 +346,18 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: nameOrUnitGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
-  })
+  });
 
   return (
     <>
@@ -346,17 +366,9 @@ export function DataTable<TData, TValue>({
         {/* Lọc danh bạ */}
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Lọc theo họ tên..."
-            value={
-              (table
-                .getColumn('btlhcm_lh_hoten')
-                ?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table
-                .getColumn('btlhcm_lh_hoten')
-                ?.setFilterValue(event.target.value)
-            }
+            placeholder="Lọc theo họ tên hoặc đơn vị..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
           {!showFilter && (
@@ -374,15 +386,15 @@ export function DataTable<TData, TValue>({
               <Select
                 value={
                   (table
-                    .getColumn('btlhcm_cb_tencb')
-                    ?.getFilterValue() as string) ?? ''
+                    .getColumn("btlhcm_cb_tencb")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onValueChange={(value) =>
-                  value === '__all__'
+                  value === "__all__"
                     ? table
-                        .getColumn('btlhcm_cb_tencb')
+                        .getColumn("btlhcm_cb_tencb")
                         ?.setFilterValue(undefined)
-                    : table.getColumn('btlhcm_cb_tencb')?.setFilterValue(value)
+                    : table.getColumn("btlhcm_cb_tencb")?.setFilterValue(value)
                 }
               >
                 <SelectTrigger className="min-w-[160px]">
@@ -394,12 +406,12 @@ export function DataTable<TData, TValue>({
                     .filter((rank) =>
                       allowedRankNames.size === 0
                         ? true
-                        : allowedRankNames.has(rank.btlhcm_cb_tencb || '')
+                        : allowedRankNames.has(rank.btlhcm_cb_tencb || "")
                     )
                     .map((rank) => (
                       <SelectItem
                         key={rank.btlhcm_cb_macb}
-                        value={rank.btlhcm_cb_tencb || ''}
+                        value={rank.btlhcm_cb_tencb || ""}
                       >
                         {rank.btlhcm_cb_tencb}
                       </SelectItem>
@@ -411,15 +423,15 @@ export function DataTable<TData, TValue>({
               <Select
                 value={
                   (table
-                    .getColumn('btlhcm_cv_tencv')
-                    ?.getFilterValue() as string) ?? ''
+                    .getColumn("btlhcm_cv_tencv")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onValueChange={(value) =>
-                  value === '__all__'
+                  value === "__all__"
                     ? table
-                        .getColumn('btlhcm_cv_tencv')
+                        .getColumn("btlhcm_cv_tencv")
                         ?.setFilterValue(undefined)
-                    : table.getColumn('btlhcm_cv_tencv')?.setFilterValue(value)
+                    : table.getColumn("btlhcm_cv_tencv")?.setFilterValue(value)
                 }
               >
                 <SelectTrigger className="min-w-[160px]">
@@ -432,13 +444,13 @@ export function DataTable<TData, TValue>({
                       allowedPositionNames.size === 0
                         ? true
                         : allowedPositionNames.has(
-                            position.btlhcm_cv_tencv || ''
+                            position.btlhcm_cv_tencv || ""
                           )
                     )
                     .map((position) => (
                       <SelectItem
                         key={position.btlhcm_cv_macv}
-                        value={position.btlhcm_cv_tencv || ''}
+                        value={position.btlhcm_cv_tencv || ""}
                       >
                         {position.btlhcm_cv_tencv}
                       </SelectItem>
@@ -452,16 +464,16 @@ export function DataTable<TData, TValue>({
                   <Select
                     value={
                       (table
-                        .getColumn('btlhcm_ba_tenb')
-                        ?.getFilterValue() as string) ?? ''
+                        .getColumn("btlhcm_ba_tenb")
+                        ?.getFilterValue() as string) ?? ""
                     }
                     onValueChange={(value) =>
-                      value === '__all__'
+                      value === "__all__"
                         ? table
-                            .getColumn('btlhcm_ba_tenb')
+                            .getColumn("btlhcm_ba_tenb")
                             ?.setFilterValue(undefined)
                         : table
-                            .getColumn('btlhcm_ba_tenb')
+                            .getColumn("btlhcm_ba_tenb")
                             ?.setFilterValue(value)
                     }
                   >
@@ -477,48 +489,48 @@ export function DataTable<TData, TValue>({
                             allowedCommitteeNames.size === 0
                               ? true
                               : allowedCommitteeNames.has(
-                                  committee.btlhcm_ba_tenb || ''
-                                )
+                                  committee.btlhcm_ba_tenb || ""
+                                );
 
                           // Hide committees from "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
                           if (
-                            userRole === 'Quản trị viên (Admin)' &&
+                            userRole === "Quản trị viên (Admin)" &&
                             committee.btlhcm_ba_maphong === 1
                           ) {
-                            return false
+                            return false;
                           }
 
                           // Then filter by selected department
                           const selectedDepartment = table
-                            .getColumn('btlhcm_pb_tenpb')
-                            ?.getFilterValue() as string
+                            .getColumn("btlhcm_pb_tenpb")
+                            ?.getFilterValue() as string;
 
                           if (
                             !selectedDepartment ||
-                            selectedDepartment === '__all__'
+                            selectedDepartment === "__all__"
                           ) {
-                            return regionFilter
+                            return regionFilter;
                           }
 
                           // Find the department by name to get its ID
                           const department = departments.find(
                             (dept) =>
                               dept.btlhcm_pb_tenpb === selectedDepartment
-                          )
+                          );
 
-                          if (!department) return regionFilter
+                          if (!department) return regionFilter;
 
                           // Only show committees that belong to the selected department
                           return (
                             regionFilter &&
                             committee.btlhcm_ba_maphong ===
                               department.btlhcm_pb_mapb
-                          )
+                          );
                         })
                         .map((committee) => (
                           <SelectItem
                             key={committee.btlhcm_ba_mab}
-                            value={committee.btlhcm_ba_tenb || ''}
+                            value={committee.btlhcm_ba_tenb || ""}
                           >
                             {committee.btlhcm_ba_tenb}
                           </SelectItem>
@@ -531,15 +543,15 @@ export function DataTable<TData, TValue>({
               <Select
                 value={
                   (table
-                    .getColumn('btlhcm_pb_tenpb')
-                    ?.getFilterValue() as string) ?? ''
+                    .getColumn("btlhcm_pb_tenpb")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onValueChange={(value) =>
-                  value === '__all__'
+                  value === "__all__"
                     ? table
-                        .getColumn('btlhcm_pb_tenpb')
+                        .getColumn("btlhcm_pb_tenpb")
                         ?.setFilterValue(undefined)
-                    : table.getColumn('btlhcm_pb_tenpb')?.setFilterValue(value)
+                    : table.getColumn("btlhcm_pb_tenpb")?.setFilterValue(value)
                 }
               >
                 <SelectTrigger className="min-w-[160px]">
@@ -554,23 +566,23 @@ export function DataTable<TData, TValue>({
                         allowedDepartmentNames.size === 0
                           ? true
                           : allowedDepartmentNames.has(
-                              department.btlhcm_pb_tenpb || ''
-                            )
+                              department.btlhcm_pb_tenpb || ""
+                            );
 
                       // Hide "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
                       if (
-                        userRole === 'Quản trị viên (Admin)' &&
+                        userRole === "Quản trị viên (Admin)" &&
                         department.btlhcm_pb_mapb === 1
                       ) {
-                        return false
+                        return false;
                       }
 
-                      return regionFilter
+                      return regionFilter;
                     })
                     .map((department) => (
                       <SelectItem
                         key={department.btlhcm_pb_mapb}
-                        value={department.btlhcm_pb_tenpb || ''}
+                        value={department.btlhcm_pb_tenpb || ""}
                       >
                         {department.btlhcm_pb_tenpb}
                       </SelectItem>
@@ -582,15 +594,15 @@ export function DataTable<TData, TValue>({
               <Select
                 value={
                   (table
-                    .getColumn('btlhcm_dv_tendv')
-                    ?.getFilterValue() as string) ?? ''
+                    .getColumn("btlhcm_dv_tendv")
+                    ?.getFilterValue() as string) ?? ""
                 }
                 onValueChange={(value) =>
-                  value === '__all__'
+                  value === "__all__"
                     ? table
-                        .getColumn('btlhcm_dv_tendv')
+                        .getColumn("btlhcm_dv_tendv")
                         ?.setFilterValue(undefined)
-                    : table.getColumn('btlhcm_dv_tendv')?.setFilterValue(value)
+                    : table.getColumn("btlhcm_dv_tendv")?.setFilterValue(value)
                 }
               >
                 <SelectTrigger className="min-w-[160px]">
@@ -602,12 +614,12 @@ export function DataTable<TData, TValue>({
                     .filter((location) =>
                       allowedUnitNames.size === 0
                         ? true
-                        : allowedUnitNames.has(location.btlhcm_dv_tendv || '')
+                        : allowedUnitNames.has(location.btlhcm_dv_tendv || "")
                     )
                     .map((location) => (
                       <SelectItem
                         key={location.btlhcm_dv_madv}
-                        value={location.btlhcm_dv_tendv || ''}
+                        value={location.btlhcm_dv_tendv || ""}
                       >
                         {location.btlhcm_dv_tendv}
                       </SelectItem>
@@ -654,7 +666,7 @@ export function DataTable<TData, TValue>({
                               header.getContext()
                             )}
                       </TableHead>
-                    )
+                    );
                   })}
                 </TableRow>
               ))}
@@ -662,20 +674,20 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
-                  const rowId = row.id
-                  const rowData = row.original as Record<string, unknown>
+                  const rowId = row.id;
+                  const rowData = row.original as Record<string, unknown>;
 
                   return (
                     <TableRow
                       key={row.id}
-                      data-state={row.getIsSelected() && 'selected'}
-                      className={isEditing ? 'bg-gray-100' : ''}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={isEditing ? "bg-gray-100" : ""}
                     >
                       {row.getVisibleCells().map((cell) => {
-                        const columnId = cell.column.id
+                        const columnId = cell.column.id;
 
                         // Skip select column for editing
-                        if (columnId === 'select') {
+                        if (columnId === "select") {
                           return (
                             <TableCell key={cell.id}>
                               {flexRender(
@@ -683,11 +695,11 @@ export function DataTable<TData, TValue>({
                                 cell.getContext()
                               )}
                             </TableCell>
-                          )
+                          );
                         }
 
                         // Handle actions column - show original content when editing
-                        if (columnId === 'actions') {
+                        if (columnId === "actions") {
                           return (
                             <TableCell key={cell.id}>
                               {flexRender(
@@ -695,11 +707,11 @@ export function DataTable<TData, TValue>({
                                 cell.getContext()
                               )}
                             </TableCell>
-                          )
+                          );
                         }
 
                         // Handle editable fields when in edit mode
-                        if (isEditing && columnId !== 'btlhcm_lh_malh') {
+                        if (isEditing && columnId !== "btlhcm_lh_malh") {
                           // Don't edit ID field
                           if (isCellEditing(rowId, columnId)) {
                             // Show input for clicked cell
@@ -709,7 +721,7 @@ export function DataTable<TData, TValue>({
                                   value={String(
                                     editingData[rowId]?.[columnId] ||
                                       rowData[columnId] ||
-                                      ''
+                                      ""
                                   )}
                                   onChange={(e) =>
                                     handleInputChange(
@@ -722,7 +734,7 @@ export function DataTable<TData, TValue>({
                                   autoFocus
                                 />
                               </TableCell>
-                            )
+                            );
                           } else {
                             // Show clickable cell that can be clicked to edit
                             return (
@@ -736,7 +748,7 @@ export function DataTable<TData, TValue>({
                                   cell.getContext()
                                 )}
                               </TableCell>
-                            )
+                            );
                           }
                         }
 
@@ -748,10 +760,10 @@ export function DataTable<TData, TValue>({
                               cell.getContext()
                             )}
                           </TableCell>
-                        )
+                        );
                       })}
                     </TableRow>
-                  )
+                  );
                 })
               ) : (
                 <TableRow>
@@ -771,7 +783,7 @@ export function DataTable<TData, TValue>({
       {/* Phân trang */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} trên{' '}
+          {table.getFilteredSelectedRowModel().rows.length} trên{" "}
           {table.getFilteredRowModel().rows.length} bản ghi được chọn.
         </div>
         <Button
@@ -825,15 +837,15 @@ export function DataTable<TData, TValue>({
                 <Label htmlFor="rank">Cấp bậc:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_capbac.toString() === '0'
-                      ? ''
+                    formData.btlhcm_lh_capbac.toString() === "0"
+                      ? ""
                       : formData.btlhcm_lh_capbac.toString()
                   }
                   onValueChange={(value) => {
                     setFormData({
                       ...formData,
                       btlhcm_lh_capbac: parseInt(value),
-                    })
+                    });
                   }}
                 >
                   <SelectTrigger>
@@ -843,7 +855,7 @@ export function DataTable<TData, TValue>({
                     {ranks.map((rank) => (
                       <SelectItem
                         key={rank.btlhcm_cb_macb}
-                        value={rank.btlhcm_cb_macb?.toString() || ''}
+                        value={rank.btlhcm_cb_macb?.toString() || ""}
                       >
                         {rank.btlhcm_cb_tencb}
                       </SelectItem>
@@ -857,15 +869,15 @@ export function DataTable<TData, TValue>({
                 <Label htmlFor="position">Chức vụ:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_chucvu.toString() === '0'
-                      ? ''
+                    formData.btlhcm_lh_chucvu.toString() === "0"
+                      ? ""
                       : formData.btlhcm_lh_chucvu.toString()
                   }
                   onValueChange={(value) => {
                     setFormData({
                       ...formData,
                       btlhcm_lh_chucvu: parseInt(value),
-                    })
+                    });
                   }}
                 >
                   <SelectTrigger>
@@ -875,7 +887,7 @@ export function DataTable<TData, TValue>({
                     {positions.map((position) => (
                       <SelectItem
                         key={position.btlhcm_cv_macv}
-                        value={position.btlhcm_cv_macv?.toString() || ''}
+                        value={position.btlhcm_cv_macv?.toString() || ""}
                       >
                         {position.btlhcm_cv_tencv}
                       </SelectItem>
@@ -889,8 +901,8 @@ export function DataTable<TData, TValue>({
                 <Label htmlFor="department">Phòng:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_phong.toString() === '0'
-                      ? ''
+                    formData.btlhcm_lh_phong.toString() === "0"
+                      ? ""
                       : formData.btlhcm_lh_phong.toString()
                   }
                   onValueChange={(value) => {
@@ -898,7 +910,7 @@ export function DataTable<TData, TValue>({
                       ...formData,
                       btlhcm_lh_phong: parseInt(value),
                       btlhcm_lh_ban: 0, // Reset ban khi phòng thay đổi
-                    })
+                    });
                   }}
                 >
                   <SelectTrigger>
@@ -908,7 +920,7 @@ export function DataTable<TData, TValue>({
                     {departments.map((department) => (
                       <SelectItem
                         key={department.btlhcm_pb_mapb}
-                        value={department.btlhcm_pb_mapb?.toString() || ''}
+                        value={department.btlhcm_pb_mapb?.toString() || ""}
                       >
                         {department.btlhcm_pb_tenpb}
                       </SelectItem>
@@ -922,15 +934,15 @@ export function DataTable<TData, TValue>({
                 <Label htmlFor="committee">Ban:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_ban.toString() === '0'
-                      ? ''
+                    formData.btlhcm_lh_ban.toString() === "0"
+                      ? ""
                       : formData.btlhcm_lh_ban.toString()
                   }
                   onValueChange={(value) => {
                     setFormData({
                       ...formData,
                       btlhcm_lh_ban: parseInt(value),
-                    })
+                    });
                   }}
                   disabled={
                     formData.btlhcm_lh_phong === 0 ||
@@ -944,14 +956,14 @@ export function DataTable<TData, TValue>({
                     <SelectValue
                       placeholder={
                         formData.btlhcm_lh_phong === 0
-                          ? 'Chọn ban'
+                          ? "Chọn ban"
                           : !committees.some(
                               (committee) =>
                                 committee.btlhcm_ba_maphong ===
                                 formData.btlhcm_lh_phong
                             )
-                          ? 'Phòng không có ban'
-                          : 'Chọn ban'
+                          ? "Phòng không có ban"
+                          : "Chọn ban"
                       }
                     />
                   </SelectTrigger>
@@ -959,16 +971,16 @@ export function DataTable<TData, TValue>({
                     {committees
                       .filter((committee) => {
                         // Chỉ hiển thị ban thuộc về phòng đã chọn
-                        if (formData.btlhcm_lh_phong === 0) return false
+                        if (formData.btlhcm_lh_phong === 0) return false;
                         return (
                           committee.btlhcm_ba_maphong ===
                           formData.btlhcm_lh_phong
-                        )
+                        );
                       })
                       .map((committee) => (
                         <SelectItem
                           key={committee.btlhcm_ba_mab}
-                          value={committee.btlhcm_ba_mab?.toString() || ''}
+                          value={committee.btlhcm_ba_mab?.toString() || ""}
                         >
                           {committee.btlhcm_ba_tenb}
                         </SelectItem>
@@ -982,15 +994,15 @@ export function DataTable<TData, TValue>({
                 <Label htmlFor="unit">Đơn vị:</Label>
                 <Select
                   value={
-                    formData.btlhcm_lh_donvi.toString() === '0'
-                      ? ''
+                    formData.btlhcm_lh_donvi.toString() === "0"
+                      ? ""
                       : formData.btlhcm_lh_donvi.toString()
                   }
                   onValueChange={(value) => {
                     setFormData({
                       ...formData,
                       btlhcm_lh_donvi: parseInt(value),
-                    })
+                    });
                   }}
                 >
                   <SelectTrigger>
@@ -1000,7 +1012,7 @@ export function DataTable<TData, TValue>({
                     {locations.map((location) => (
                       <SelectItem
                         key={location.btlhcm_dv_madv}
-                        value={location.btlhcm_dv_madv?.toString() || ''}
+                        value={location.btlhcm_dv_madv?.toString() || ""}
                       >
                         {location.btlhcm_dv_tendv}
                       </SelectItem>
@@ -1076,18 +1088,18 @@ export function DataTable<TData, TValue>({
               variant="outline"
               onClick={() => {
                 setFormData({
-                  btlhcm_lh_hoten: '',
+                  btlhcm_lh_hoten: "",
                   btlhcm_lh_capbac: 0,
                   btlhcm_lh_chucvu: 0,
                   btlhcm_lh_phong: 0,
                   btlhcm_lh_ban: 0,
                   btlhcm_lh_donvi: 0,
-                  btlhcm_lh_sdt_ds: '',
-                  btlhcm_lh_sdt_qs: '',
-                  btlhcm_lh_sdt_dd: '',
+                  btlhcm_lh_sdt_ds: "",
+                  btlhcm_lh_sdt_qs: "",
+                  btlhcm_lh_sdt_dd: "",
                   btlhcm_lh_ngaytao: new Date(),
                   btlhcm_lh_ngaycapnhat: new Date(),
-                })
+                });
               }}
             >
               Làm mới
@@ -1096,5 +1108,5 @@ export function DataTable<TData, TValue>({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

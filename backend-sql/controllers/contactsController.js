@@ -3,7 +3,7 @@ import { pool } from '../db.js'
 // Lấy tất cả danh bạ
 export const getAllContacts = async (req, res) => {
   const result = await pool.query(`
-    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv
+    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, dv.btlhcm_dv_diachi
     FROM danhbalienhe db 
     LEFT JOIN capbac cb ON db.btlhcm_lh_capbac = cb.btlhcm_cb_macb
     LEFT JOIN chucvu cv ON db.btlhcm_lh_chucvu = cv.btlhcm_cv_macv
@@ -20,7 +20,7 @@ export const getContactsByMilitaryRegion = async (req, res) => {
   const { region } = req.query
   const result = await pool.query(
     `
-    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, qk.btlhcm_qk_tenqk
+    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, qk.btlhcm_qk_tenqk, dv.btlhcm_dv_diachi
     FROM danhbalienhe db 
     LEFT JOIN capbac cb ON db.btlhcm_lh_capbac = cb.btlhcm_cb_macb
     LEFT JOIN chucvu cv ON db.btlhcm_lh_chucvu = cv.btlhcm_cv_macv
@@ -41,7 +41,7 @@ export const getContactsByProvince = async (req, res) => {
   const { province } = req.query
   const result = await pool.query(
     `
-    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, tt.btlhcm_tt_tentt
+    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, tt.btlhcm_tt_tentt, dv.btlhcm_dv_diachi
     FROM danhbalienhe db 
     LEFT JOIN capbac cb ON db.btlhcm_lh_capbac = cb.btlhcm_cb_macb
     LEFT JOIN chucvu cv ON db.btlhcm_lh_chucvu = cv.btlhcm_cv_macv
@@ -62,7 +62,7 @@ export const getContactsByWard = async (req, res) => {
   const { ward } = req.query
   const result = await pool.query(
     `
-    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, px.btlhcm_px_tenpx
+    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, px.btlhcm_px_tenpx, dv.btlhcm_dv_diachi
     FROM danhbalienhe db 
     LEFT JOIN capbac cb ON db.btlhcm_lh_capbac = cb.btlhcm_cb_macb
     LEFT JOIN chucvu cv ON db.btlhcm_lh_chucvu = cv.btlhcm_cv_macv

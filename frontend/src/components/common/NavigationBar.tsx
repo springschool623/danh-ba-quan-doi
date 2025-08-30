@@ -149,9 +149,7 @@ export function NavigationBar() {
               asChild
               className={navigationMenuTriggerStyle()}
             >
-              <Link href="/danh-ba?tinhthanh=1">
-                Danh bạ Thành phố Hồ Chí Minh
-              </Link>
+              <Link href="/danh-ba?tinhthanh=1">Danh bạ BTL TPHCM</Link>
             </NavigationMenuLink>
             {/* <NavigationMenuTrigger>
               Danh bạ Thành phố Hồ Chí Minh
@@ -193,7 +191,7 @@ export function NavigationBar() {
           </NavigationMenuItem>
           {/* Danh bạ Cấp Phường */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger>Danh bạ Cấp Phường</NavigationMenuTrigger>
+            <NavigationMenuTrigger>Danh bạ Phường/Xã</NavigationMenuTrigger>
             <NavigationMenuContent className="z-50">
               <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                 {loading ? (
