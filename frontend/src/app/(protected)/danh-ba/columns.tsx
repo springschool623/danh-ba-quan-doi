@@ -14,7 +14,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Contact } from '@/types/contacts'
 import { formatDate } from '@/lib/utils'
-import Image from 'next/image'
+// import Image from 'next/image'
 
 export const getContactColumns = (
   onEdit: (contact: Contact) => void,
@@ -65,7 +65,7 @@ export const getContactColumns = (
     },
     {
       accessorKey: 'btlhcm_ba_tenb',
-      header: 'Ban',
+      header: 'Cơ quan',
     },
     {
       accessorKey: 'btlhcm_pb_tenpb',
@@ -90,6 +90,10 @@ export const getContactColumns = (
     {
       accessorKey: 'btlhcm_lh_sdt_dd',
       header: 'SĐT Di động',
+    },
+    {
+      accessorKey: 'btlhcm_lh_sdt_fax',
+      header: 'Số Fax',
     },
     // {
     //   accessorKey: 'btlhcm_lh_hinhanh',

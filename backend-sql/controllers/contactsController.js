@@ -101,12 +101,12 @@ export const addContact = async (req, res) => {
     btlhcm_lh_donvi,
     btlhcm_lh_sdt_ds,
     btlhcm_lh_sdt_qs,
+    btlhcm_lh_sdt_fax,
     btlhcm_lh_sdt_dd,
-    btlhcm_lh_hinhanh,
   } = req.body
 
   const result = await pool.query(
-    'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_hinhanh, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+    'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_fax, btlhcm_lh_sdt_dd, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac || null,
@@ -116,8 +116,8 @@ export const addContact = async (req, res) => {
       btlhcm_lh_donvi || null,
       btlhcm_lh_sdt_ds || null,
       btlhcm_lh_sdt_qs || null,
+      btlhcm_lh_sdt_fax || null,
       btlhcm_lh_sdt_dd || null,
-      btlhcm_lh_hinhanh || null,
       new Date(),
       new Date(),
     ]
@@ -135,13 +135,13 @@ export const updateContact = async (req, res) => {
     btlhcm_lh_phong,
     btlhcm_lh_ban,
     btlhcm_lh_donvi,
-    btlhcm_lh_hinhanh,
+    btlhcm_lh_sdt_fax,
     btlhcm_lh_sdt_ds,
     btlhcm_lh_sdt_qs,
     btlhcm_lh_sdt_dd,
   } = req.body
   const result = await pool.query(
-    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_dd = $9, btlhcm_lh_hinhanh = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
+    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $12 WHERE btlhcm_lh_malh = $13',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac,
@@ -151,8 +151,8 @@ export const updateContact = async (req, res) => {
       btlhcm_lh_donvi,
       btlhcm_lh_sdt_ds,
       btlhcm_lh_sdt_qs,
+      btlhcm_lh_sdt_fax,
       btlhcm_lh_sdt_dd,
-      btlhcm_lh_hinhanh,
       new Date(),
       btlhcm_lh_malh,
     ]
@@ -191,42 +191,42 @@ export const importContactsFromExcel = async (req, res) => {
     // console.log('Excel data:', data)
 
     for (const row of data) {
-      const hoten = row['Họ tên']
+      const hoten = row['HỌ TÊN']
       const capbacId = await getIdByName(
         'btlhcm_cb_macb',
         'capbac',
         'btlhcm_cb_tencb',
-        row['Cấp bậc']
+        row['CẤP BẬC']
       )
       const chucvuId = await getIdByName(
         'btlhcm_cv_macv',
         'chucvu',
         'btlhcm_cv_tencv',
-        row['Chức vụ']
+        row['CHỨC VỤ']
       )
       const phongId = await getIdByName(
         'btlhcm_pb_mapb',
         'phong',
         'btlhcm_pb_tenpb',
-        row['Phòng']
+        row['PHÒNG']
       )
       const banId = await getIdByName(
         'btlhcm_ba_mab',
         'ban',
         'btlhcm_ba_tenb',
-        row['Ban']
+        row['CƠ QUAN']
       )
       const donviId = await getIdByName(
         'btlhcm_dv_madv',
         'donvi',
         'btlhcm_dv_tendv',
-        row['Đơn vị']
+        row['ĐƠN VỊ']
       )
 
-      const sdtDs = row['Số điện thoại DS']
-      const sdtQs = row['Số điện thoại QS']
-      const sdtDd = row['Số điện thoại DD']
-
+      const sdtDs = row['SĐT DÂN SỰ']
+      const sdtQs = row['SĐT QUÂN SỰ']
+      const sdtDd = row['SĐT DI ĐỘNG']
+      const sdtFax = row['SỐ FAX']
       console.log({
         hoten,
         capbacId,
@@ -243,8 +243,8 @@ export const importContactsFromExcel = async (req, res) => {
         `INSERT INTO danhbalienhe (
       btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
       btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
-      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax,
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [
           hoten,
           capbacId,
@@ -255,6 +255,7 @@ export const importContactsFromExcel = async (req, res) => {
           sdtDs,
           sdtQs,
           sdtDd,
+          sdtFax,
         ]
       )
     }
@@ -285,17 +286,18 @@ export const exportExcel = async (req, res) => {
     // Chuyển dữ liệu query thành mảng object
     const data = result.rows.map((row) => ({
       STT: row.btlhcm_lh_malh,
-      'Họ tên': row.btlhcm_lh_hoten,
-      'Cấp bậc': row.btlhcm_cb_tencb,
-      'Chức vụ': row.btlhcm_cv_tencv,
-      Ban: row.btlhcm_ba_tenb,
-      Phòng: row.btlhcm_pb_tenpb,
-      'Đơn vị': row.btlhcm_dv_tendv,
-      'Địa chỉ': row.btlhcm_dv_diachi,
-      'SĐT Dân sự': row.btlhcm_lh_sdt_ds,
-      'SĐT Quân sự': row.btlhcm_lh_sdt_qs,
-      'SĐT Di động': row.btlhcm_lh_sdt_dd,
-      'Hình ảnh': row.btlhcm_lh_hinhanh,
+      'HỌ TÊN': row.btlhcm_lh_hoten,
+      'CẤP BẬC': row.btlhcm_cb_tencb,
+      'CHỨC VỤ': row.btlhcm_cv_tencv,
+      'CƠ QUAN': row.btlhcm_ba_tenb,
+      PHÒNG: row.btlhcm_pb_tenpb,
+      'ĐƠN VỊ': row.btlhcm_dv_tendv,
+      'ĐỊA CHỈ': row.btlhcm_dv_diachi,
+      'SĐT DÂN SỰ': row.btlhcm_lh_sdt_ds,
+      'SĐT QUÂN SỰ': row.btlhcm_lh_sdt_qs,
+      'SĐT DI ĐỘNG': row.btlhcm_lh_sdt_dd,
+      'SỐ FAX': row.btlhcm_lh_sdt_fax,
+      'HÌNH ẢNH': row.btlhcm_lh_hinhanh,
     }))
 
     // Tạo worksheet từ json
@@ -354,6 +356,7 @@ export const exportVcard = async (req, res) => {
           `TEL;TYPE=work,voice:${row.btlhcm_lh_sdt_ds || ''}`,
           `TEL;TYPE=other,voice:${row.btlhcm_lh_sdt_qs || ''}`,
           `TEL;TYPE=cell,voice:${row.btlhcm_lh_sdt_dd || ''}`,
+          `TEL;TYPE=fax,voice:${row.btlhcm_lh_sdt_fax || ''}`,
           `PHOTO;TYPE=jpeg:${row.btlhcm_lh_hinhanh || ''}`,
           `ADR;TYPE=work:;;${row.btlhcm_dv_diachi || ''}`,
           'END:VCARD',

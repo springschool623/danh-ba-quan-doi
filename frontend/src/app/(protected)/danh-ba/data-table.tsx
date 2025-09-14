@@ -122,6 +122,7 @@ export function DataTable<TData, TValue>({
     btlhcm_lh_donvi: 0,
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
+    btlhcm_lh_sdt_fax: '',
     btlhcm_lh_sdt_dd: '',
     btlhcm_lh_hinhanh: '',
     btlhcm_lh_ngaytao: new Date(),
@@ -207,6 +208,7 @@ export function DataTable<TData, TValue>({
           btlhcm_lh_donvi: 0,
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
+          btlhcm_lh_sdt_fax: '',
           btlhcm_lh_sdt_dd: '',
           btlhcm_lh_hinhanh: '',
           btlhcm_lh_ngaytao: new Date(),
@@ -324,6 +326,7 @@ export function DataTable<TData, TValue>({
         btlhcm_lh_donvi: 0,
         btlhcm_lh_sdt_ds: '',
         btlhcm_lh_sdt_qs: '',
+        btlhcm_lh_sdt_fax: '',
         btlhcm_lh_sdt_dd: '',
         btlhcm_lh_hinhanh: '',
         btlhcm_lh_ngaytao: new Date(),
@@ -1165,6 +1168,22 @@ export function DataTable<TData, TValue>({
                   }
                 />
               </div>
+              {/* Số điện thoại fax */}
+              <div className="grid gap-3 w-2/3">
+                <Label htmlFor="phone_fax">Số Fax:</Label>
+                <Input
+                  id="phone_fax"
+                  name="phone_fax"
+                  placeholder="0909090909"
+                  value={formData.btlhcm_lh_sdt_fax}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      btlhcm_lh_sdt_fax: e.target.value,
+                    })
+                  }
+                />
+              </div>
 
               {/* Số điện thoại di động */}
               <div className="grid gap-3 w-2/3">
@@ -1201,6 +1220,7 @@ export function DataTable<TData, TValue>({
                   btlhcm_lh_donvi: 0,
                   btlhcm_lh_sdt_ds: '',
                   btlhcm_lh_sdt_qs: '',
+                  btlhcm_lh_sdt_fax: '',
                   btlhcm_lh_sdt_dd: '',
                   btlhcm_lh_hinhanh: '',
                   btlhcm_lh_ngaytao: new Date(),

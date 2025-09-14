@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS DanhBaLienHe (
     btlhcm_lh_donvi INT NULL REFERENCES DonVi(btlhcm_dv_madv) ON DELETE RESTRICT,
     btlhcm_lh_sdt_ds VARCHAR(20) NULL,
     btlhcm_lh_sdt_qs VARCHAR(20) NULL,
+    btlhcm_lh_sdt_fax VARCHAR(20) NULL,
     btlhcm_lh_sdt_dd VARCHAR(20) NULL UNIQUE,
     btlhcm_lh_hinhanh VARCHAR(255) NULL,
     btlhcm_lh_ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
