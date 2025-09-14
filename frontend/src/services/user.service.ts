@@ -91,3 +91,9 @@ export const getUserRoles = async (user: User) => {
   const data = await response.json()
   return data
 }
+
+export const getUserPermissionByRole = async (user: User) => {
+  const response = await fetch(apiUrl(`/api/roles/${user.btlhcm_nd_mand}`))
+  const data = await response.json()
+  return data
+}

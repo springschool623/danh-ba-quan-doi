@@ -9,6 +9,7 @@ export type Contact = {
   btlhcm_lh_sdt_ds: string
   btlhcm_lh_sdt_qs: string
   btlhcm_lh_sdt_dd: string
+  btlhcm_lh_hinhanh?: string
   btlhcm_cv_tencv?: string
   btlhcm_pb_tenpb?: string
   btlhcm_ba_tenb?: string

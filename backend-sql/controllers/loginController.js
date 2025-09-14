@@ -15,12 +15,15 @@ export const userLogin = async (req, res) => {
 
     const result = await pool.query(
       `SELECT nd.btlhcm_nd_mand, nd.btlhcm_nd_trangthai, 
-              vt.btlhcm_vt_mavt, vt.btlhcm_vt_tenvt 
+              vt.btlhcm_vt_mavt, vt.btlhcm_vt_tenvt,
+              qckv.btlhcm_qtckv_maqk, qckv.btlhcm_qtckv_matt, qckv.btlhcm_qtckv_mapx
        FROM nguoidung nd 
        JOIN vaitronguoidung vtnd 
             ON nd.btlhcm_nd_mand = vtnd.btlhcm_vtnd_mand 
        JOIN vaitro vt 
             ON vt.btlhcm_vt_mavt = vtnd.btlhcm_vtnd_mavt 
+        JOIN quyentruycaptheokhuvuc qckv
+            ON qckv.btlhcm_qtckv_mand = nd.btlhcm_nd_mand
        WHERE nd.btlhcm_nd_mand = $1 AND nd.btlhcm_nd_matkhau = $2`,
       [username, password]
     )
@@ -41,15 +44,22 @@ export const userLogin = async (req, res) => {
     }
 
     let roles = []
+    let wardIds = []
+
     for (const row of result.rows) {
       roles.push({
         btlhcm_vt_mavt: row.btlhcm_vt_mavt,
         btlhcm_vt_tenvt: row.btlhcm_vt_tenvt,
       })
+      wardIds.push({
+        btlhcm_qtckv_maqk: row.btlhcm_qtckv_maqk,
+        btlhcm_qtckv_matt: row.btlhcm_qtckv_matt,
+        btlhcm_qtckv_mapx: row.btlhcm_qtckv_mapx,
+      })
     }
 
     const token = jwt.sign(
-      { username, password, roles },
+      { username, password, roles, wardIds },
       process.env.JWT_SECRET_KEY,
       {
         expiresIn: '1h',
@@ -71,6 +81,7 @@ export const userLogin = async (req, res) => {
       user: result.rows[0],
       token,
       roles,
+      wardIds,
     })
   } catch (err) {
     console.error(err)

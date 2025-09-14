@@ -26,7 +26,7 @@ export const addUser = async (req, res) => {
     console.log('Thêm người dùng thành công!')
     await pool.query(
       `INSERT INTO vaitronguoidung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) VALUES ($1, $2)`,
-      [btlhcm_nd_mand, 3]
+      [btlhcm_nd_mand, 4]
     )
   } else {
     console.log('Thêm người dùng thất bại!')
@@ -80,7 +80,6 @@ export const changeUserStatus = async (req, res) => {
 export const addRolesToUser = async (req, res) => {
   const { btlhcm_nd_mand } = req.params
   const { roles } = req.body
-  console.log('Vai trò: ', roles)
   try {
     // Xóa tất cả vai trò hiện tại của user
     await pool.query(

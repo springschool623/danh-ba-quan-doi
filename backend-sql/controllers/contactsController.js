@@ -1,10 +1,12 @@
 import { pool } from '../db.js'
 import * as XLSX from 'xlsx'
+import fs from 'fs'
 
 // Lấy tất cả danh bạ
 export const getAllContacts = async (req, res) => {
   const result = await pool.query(`
-    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, dv.btlhcm_dv_diachi
+    SELECT db.*, cb.btlhcm_cb_tencb, cv.btlhcm_cv_tencv, pb.btlhcm_pb_tenpb, 
+           ba.btlhcm_ba_tenb, dv.btlhcm_dv_tendv, dv.btlhcm_dv_diachi
     FROM danhbalienhe db 
     LEFT JOIN capbac cb ON db.btlhcm_lh_capbac = cb.btlhcm_cb_macb
     LEFT JOIN chucvu cv ON db.btlhcm_lh_chucvu = cv.btlhcm_cv_macv
@@ -13,7 +15,16 @@ export const getAllContacts = async (req, res) => {
     LEFT JOIN donvi dv ON db.btlhcm_lh_donvi = dv.btlhcm_dv_madv
     ORDER BY db.btlhcm_lh_malh ASC
   `)
-  res.json(result.rows)
+
+  // thêm prefix URL cho ảnh
+  const contacts = result.rows.map((row) => ({
+    ...row,
+    btlhcm_lh_hinhanh: row.btlhcm_lh_hinhanh
+      ? `${req.protocol}://${req.get('host')}${row.btlhcm_lh_hinhanh}`
+      : null,
+  }))
+
+  res.json(contacts)
 }
 
 // Lấy danh bạ theo Cấp Quân Khu
@@ -91,9 +102,11 @@ export const addContact = async (req, res) => {
     btlhcm_lh_sdt_ds,
     btlhcm_lh_sdt_qs,
     btlhcm_lh_sdt_dd,
+    btlhcm_lh_hinhanh,
   } = req.body
+
   const result = await pool.query(
-    'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+    'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_hinhanh, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac || null,
@@ -104,6 +117,7 @@ export const addContact = async (req, res) => {
       btlhcm_lh_sdt_ds || null,
       btlhcm_lh_sdt_qs || null,
       btlhcm_lh_sdt_dd || null,
+      btlhcm_lh_hinhanh || null,
       new Date(),
       new Date(),
     ]
@@ -121,12 +135,13 @@ export const updateContact = async (req, res) => {
     btlhcm_lh_phong,
     btlhcm_lh_ban,
     btlhcm_lh_donvi,
+    btlhcm_lh_hinhanh,
     btlhcm_lh_sdt_ds,
     btlhcm_lh_sdt_qs,
     btlhcm_lh_sdt_dd,
   } = req.body
   const result = await pool.query(
-    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_dd = $9, btlhcm_lh_ngaycapnhat = $10 WHERE btlhcm_lh_malh = $11',
+    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_dd = $9, btlhcm_lh_hinhanh = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac,
@@ -137,6 +152,7 @@ export const updateContact = async (req, res) => {
       btlhcm_lh_sdt_ds,
       btlhcm_lh_sdt_qs,
       btlhcm_lh_sdt_dd,
+      btlhcm_lh_hinhanh,
       new Date(),
       btlhcm_lh_malh,
     ]
@@ -152,6 +168,105 @@ export const deleteContact = async (req, res) => {
     [btlhcm_lh_malh]
   )
   res.json(result.rows)
+}
+
+//Nhập danh bạ từ file Excel
+export const importContactsFromExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Không có file upload' })
+    }
+
+    const filePath = req.file.path
+    // console.log('Uploaded file:', filePath)
+
+    // Đọc file Excel qua buffer
+    const fileBuffer = fs.readFileSync(filePath)
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+    const data = XLSX.utils.sheet_to_json(worksheet)
+
+    console.log('Excel data:', data)
+
+    // console.log('Excel data:', data)
+
+    for (const row of data) {
+      const hoten = row['Họ tên']
+      const capbacId = await getIdByName(
+        'btlhcm_cb_macb',
+        'capbac',
+        'btlhcm_cb_tencb',
+        row['Cấp bậc']
+      )
+      const chucvuId = await getIdByName(
+        'btlhcm_cv_macv',
+        'chucvu',
+        'btlhcm_cv_tencv',
+        row['Chức vụ']
+      )
+      const phongId = await getIdByName(
+        'btlhcm_pb_mapb',
+        'phong',
+        'btlhcm_pb_tenpb',
+        row['Phòng']
+      )
+      const banId = await getIdByName(
+        'btlhcm_ba_mab',
+        'ban',
+        'btlhcm_ba_tenb',
+        row['Ban']
+      )
+      const donviId = await getIdByName(
+        'btlhcm_dv_madv',
+        'donvi',
+        'btlhcm_dv_tendv',
+        row['Đơn vị']
+      )
+
+      const sdtDs = row['Số điện thoại DS']
+      const sdtQs = row['Số điện thoại QS']
+      const sdtDd = row['Số điện thoại DD']
+
+      console.log({
+        hoten,
+        capbacId,
+        chucvuId,
+        phongId,
+        banId,
+        donviId,
+        sdtDs,
+        sdtQs,
+        sdtDd,
+      })
+
+      await pool.query(
+        `INSERT INTO danhbalienhe (
+      btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
+      btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
+      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [
+          hoten,
+          capbacId,
+          chucvuId,
+          phongId,
+          banId,
+          donviId,
+          sdtDs,
+          sdtQs,
+          sdtDd,
+        ]
+      )
+    }
+
+    // Xoá file tạm
+    fs.unlinkSync(filePath)
+
+    res.json({ success: true, imported: data.length })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Lỗi khi import Excel' })
+  }
 }
 
 // Xuất Excel
@@ -180,6 +295,7 @@ export const exportExcel = async (req, res) => {
       'SĐT Dân sự': row.btlhcm_lh_sdt_ds,
       'SĐT Quân sự': row.btlhcm_lh_sdt_qs,
       'SĐT Di động': row.btlhcm_lh_sdt_dd,
+      'Hình ảnh': row.btlhcm_lh_hinhanh,
     }))
 
     // Tạo worksheet từ json
@@ -238,6 +354,7 @@ export const exportVcard = async (req, res) => {
           `TEL;TYPE=work,voice:${row.btlhcm_lh_sdt_ds || ''}`,
           `TEL;TYPE=other,voice:${row.btlhcm_lh_sdt_qs || ''}`,
           `TEL;TYPE=cell,voice:${row.btlhcm_lh_sdt_dd || ''}`,
+          `PHOTO;TYPE=jpeg:${row.btlhcm_lh_hinhanh || ''}`,
           `ADR;TYPE=work:;;${row.btlhcm_dv_diachi || ''}`,
           'END:VCARD',
         ]
@@ -256,4 +373,15 @@ export const exportVcard = async (req, res) => {
     console.error('❌ Lỗi export VCard:', err)
     res.status(500).json({ message: 'Lỗi export VCard' })
   }
+}
+
+// Lấy ID theo tên
+async function getIdByName(id, table, column, value) {
+  if (!value) return null
+  const result = await pool.query(
+    `SELECT ${id} FROM ${table} WHERE ${column} = $1 LIMIT 1`,
+    [value]
+  )
+  // console.log('ID:', result.rows[0][id])
+  return result.rows.length ? result.rows[0][id] : null
 }

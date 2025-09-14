@@ -38,8 +38,10 @@ import { Label } from '@/components/ui/label'
 import {
   addContact,
   exportExcel,
+  importContactsFromExcel,
   exportVcard,
   getContacts,
+  uploadImage,
 } from '@/services/contact.service'
 import {
   Select,
@@ -64,6 +66,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import usePermission from '@/hooks/usePermission'
+import { User } from '@/types/users'
+import useUser from '@/hooks/useUser'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -101,6 +106,19 @@ export function DataTable<TData, TValue>({
   const [isLoading, setIsLoading] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
   const [isImportExportOpen, setIsImportExportOpen] = useState(false)
+  const user = useUser()
+  const permissions = usePermission(user as User)
+  const canAdd = permissions.includes('ADD_CONTACT')
+  const canExport = permissions.includes('EXPORT_CONTACT')
+  const canImport = permissions.includes('IMPORT_CONTACT')
+
+  useEffect(() => {
+    console.log('permissions', permissions)
+    console.log('canAdd', canAdd)
+    console.log('canExport', canExport)
+    console.log('canImport', canImport)
+  }, [permissions])
+
   const [formData, setFormData] = useState({
     btlhcm_lh_hoten: '',
     btlhcm_lh_capbac: 0,
@@ -111,58 +129,25 @@ export function DataTable<TData, TValue>({
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
     btlhcm_lh_sdt_dd: '',
+    btlhcm_lh_hinhanh: '',
     btlhcm_lh_ngaytao: new Date(),
     btlhcm_lh_ngaycapnhat: new Date(),
   })
 
-  // Update table data when prop data changes
   useEffect(() => {
     let filteredData = data
 
-    // Filter out contacts from "Phòng Thủ trưởng Bộ Tư Lệnh" for Admin users
-    if (userRole === 'Quản trị viên (User)') {
+    console.log('userRole', userRole)
+
+    // User đơn vị không xem được danh bạ phòng Thủ trưởng Bộ Tư Lệnh
+    if (userRole === 'User') {
       filteredData = data.filter((contact: TData) => {
-        // Check if contact belongs to the restricted department
-        // "Phòng Thủ trưởng Bộ Tư Lệnh" has ID 1
         const contactData = contact as Record<string, unknown>
-        return (contactData.btlhcm_lh_phong as number) !== 1
+        return contactData.btlhcm_pb_tenpb !== 'Thủ trưởng Bộ Tư lệnh'
       })
     }
-
     setTableData(filteredData)
   }, [data, userRole])
-
-  // const handleToggleEdit = () => {
-  //   if (isEditing) {
-  //     // Save all changes
-  //     const updatedData = tableData.map((row, index) => {
-  //       const rowId = index.toString()
-  //       if (editingData[rowId]) {
-  //         return { ...row, ...editingData[rowId] }
-  //       }
-  //       return row
-  //     })
-
-  //     setTableData(updatedData)
-  //     setIsEditing(false)
-  //     setEditingData({})
-  //     setEditingCells({})
-
-  //     if (onDataChange) {
-  //       onDataChange(updatedData)
-  //     }
-  //   } else {
-  //     // Enter edit mode
-  //     setIsEditing(true)
-  //     // Initialize editing data for all rows
-  //     const initialEditingData: Record<string, Record<string, unknown>> = {}
-  //     tableData.forEach((row, index) => {
-  //       initialEditingData[index.toString()] = row as Record<string, unknown>
-  //     })
-  //     setEditingData(initialEditingData)
-  //     setEditingCells({})
-  //   }
-  // }
 
   const handleCellClick = (rowId: string, columnId: string) => {
     if (
@@ -194,7 +179,21 @@ export function DataTable<TData, TValue>({
     return isEditing && editingCells[rowId]?.has(columnId)
   }
 
+  const handleUploadImage = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const imageUrl = await uploadImage(file)
+      setFormData({
+        ...formData,
+        btlhcm_lh_hinhanh: imageUrl,
+      })
+    }
+  }
+
   const handleAddContact = async () => {
+    console.log('formData', formData)
     try {
       const response = await addContact(formData)
 
@@ -215,6 +214,7 @@ export function DataTable<TData, TValue>({
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
           btlhcm_lh_sdt_dd: '',
+          btlhcm_lh_hinhanh: '',
           btlhcm_lh_ngaytao: new Date(),
           btlhcm_lh_ngaycapnhat: new Date(),
         })
@@ -231,6 +231,44 @@ export function DataTable<TData, TValue>({
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Hàm mở file để chọn Excel (xlsx/csv)
+  const openFile = (): Promise<File | null> => {
+    return new Promise((resolve) => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.xlsx,.xls,.csv' // giới hạn định dạng
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement
+        const file = target.files?.[0] || null
+        resolve(file)
+      }
+      input.click()
+    })
+  }
+
+  const handleImportCSV = async () => {
+    const file = await openFile()
+    console.log('Import CSV', file)
+    if (file) {
+      const response = await importContactsFromExcel(file)
+      if (response.ok) {
+        console.log('Import CSV thành công')
+        toast.success('Nhập danh bạ thành công!', {
+          duration: 2000,
+          position: 'top-right',
+        })
+      } else {
+        console.log('Import CSV thất bại')
+        toast.error('Nhập danh bạ thất bại!', {
+          duration: 2000,
+          position: 'top-right',
+        })
+      }
+    }
+    setIsImportExportOpen(false)
+    console.log('Import CSV')
   }
 
   const handleExportCSV = async () => {
@@ -251,11 +289,6 @@ export function DataTable<TData, TValue>({
     } else {
       console.log('Export VCard thất bại')
     }
-  }
-
-  const handleImportCSV = () => {
-    setIsImportExportOpen(false)
-    console.log('Import CSV')
   }
 
   useEffect(() => {
@@ -298,6 +331,7 @@ export function DataTable<TData, TValue>({
         btlhcm_lh_sdt_ds: '',
         btlhcm_lh_sdt_qs: '',
         btlhcm_lh_sdt_dd: '',
+        btlhcm_lh_hinhanh: '',
         btlhcm_lh_ngaytao: new Date(),
         btlhcm_lh_ngaycapnhat: new Date(),
       })
@@ -365,7 +399,7 @@ export function DataTable<TData, TValue>({
       .toLowerCase()
     if (!query) return true
     const r = row.original as Record<string, unknown>
-    const fields = ['btlhcm_lh_hoten', 'btlhcm_dv_tendv']
+    const fields = ['btlhcm_lh_hoten', 'btlhcm_dv_tendv', 'btlhcm_dv_diachi']
     return fields.some((f) =>
       String(r[f] ?? '')
         .toLowerCase()
@@ -402,7 +436,7 @@ export function DataTable<TData, TValue>({
         {/* Lọc danh bạ */}
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Lọc theo họ tên hoặc đơn vị..."
+            placeholder="Lọc theo họ tên, đơn vị, địa chỉ..."
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
@@ -676,9 +710,11 @@ export function DataTable<TData, TValue>({
         </div>
         {/* Thêm liên hệ */}
         <div className="flex items-center gap-4 py-4 ml-auto">
-          <Button variant="edit" onClick={() => setIsAddContactOpen(true)}>
-            Thêm liên hệ
-          </Button>
+          {canAdd && (
+            <Button variant="edit" onClick={() => setIsAddContactOpen(true)}>
+              Thêm liên hệ
+            </Button>
+          )}
           <DropdownMenu
             open={isImportExportOpen}
             onOpenChange={setIsImportExportOpen}
@@ -690,15 +726,21 @@ export function DataTable<TData, TValue>({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="flex flex-col gap-2">
-              <Button variant="ghost" onClick={handleImportCSV}>
-                Nhập file CSV (Excel)
-              </Button>
-              <Button variant="ghost" onClick={handleExportCSV}>
-                Xuất file CSV (Excel)
-              </Button>
-              <Button variant="ghost" onClick={handleExportVCard}>
-                Xuất file VCard (VCF)
-              </Button>
+              {canImport && (
+                <Button variant="ghost" onClick={handleImportCSV}>
+                  Nhập file CSV (Excel)
+                </Button>
+              )}
+              {canExport && (
+                <Button variant="ghost" onClick={handleExportCSV}>
+                  Xuất file CSV (Excel)
+                </Button>
+              )}
+              {canExport && (
+                <Button variant="ghost" onClick={handleExportVCard}>
+                  Xuất file VCard (VCF)
+                </Button>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -1078,6 +1120,16 @@ export function DataTable<TData, TValue>({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Hình ảnh */}
+              {/* <div className="grid gap-3">
+                <Label htmlFor="image">Hình ảnh:</Label>
+                <Input
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  onChange={handleUploadImage}
+                />
+              </div> */}
             </div>
           </div>
 
@@ -1155,6 +1207,7 @@ export function DataTable<TData, TValue>({
                   btlhcm_lh_sdt_ds: '',
                   btlhcm_lh_sdt_qs: '',
                   btlhcm_lh_sdt_dd: '',
+                  btlhcm_lh_hinhanh: '',
                   btlhcm_lh_ngaytao: new Date(),
                   btlhcm_lh_ngaycapnhat: new Date(),
                 })

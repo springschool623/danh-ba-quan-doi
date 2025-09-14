@@ -15,8 +15,14 @@ import rolesRoutes from './routes/rolesRoute.js'
 import usersRoutes from './routes/usersRoute.js'
 import { fileURLToPath } from 'url'
 import setupDatabase from './setup.js'
+import path from 'path'
+import multer from 'multer'
+import permissionsRoutes from './routes/permissionsRoute.js'
 
 dotenv.config() // load .env
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const app = express()
 const port = process.env.PORT || 5000
@@ -28,6 +34,7 @@ app.use(
   })
 )
 app.use(express.json())
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.use('/api/contacts', contactRoutes)
 app.use('/api/military-regions', militaryRegionsRoutes)
@@ -41,6 +48,7 @@ app.use('/api/committees', committeesRoutes)
 app.use('/api/locations', locationsRoutes)
 app.use('/api/roles', rolesRoutes)
 app.use('/api/users', usersRoutes)
+app.use('/api/permissions', permissionsRoutes)
 
 app.get('/', (req, res) => {
   res.send(`Server running on port ${process.env.PORT}`)

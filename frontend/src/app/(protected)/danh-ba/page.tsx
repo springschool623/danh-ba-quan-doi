@@ -44,6 +44,9 @@ import { toast } from 'sonner'
 import useUserRoles from '@/hooks/useUserRoles'
 import { Committee } from '@/types/committees'
 import { getCommittees } from '@/services/committee.service'
+import usePermission, { useWardPermission } from '@/hooks/usePermission'
+import { User } from '@/types/users'
+import useUser from '@/hooks/useUser'
 
 export default function ContactPage() {
   return (
@@ -59,6 +62,7 @@ function ContactPageContent() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null)
   const [selectedWard, setSelectedWard] = useState<string | null>(null)
+  const [selectedUserWard, setSelectedUserWard] = useState<number | null>(null)
   const searchParams = useSearchParams()
   const [locations, setLocations] = useState<Location[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
@@ -78,10 +82,23 @@ function ContactPageContent() {
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
     btlhcm_lh_sdt_dd: '',
+    btlhcm_lh_hinhanh: '',
     btlhcm_lh_ngaytao: new Date(),
     btlhcm_lh_ngaycapnhat: new Date(),
   })
-  const { hasAnyRole, roles } = useUserRoles()
+  const { roles } = useUserRoles()
+  const user = useUser()
+  const { wardId } = useWardPermission(user as User)
+  const permissions = usePermission(user as User)
+  const canEdit = permissions.includes('EDIT_CONTACT')
+  const canDelete = permissions.includes('DELETE_CONTACT')
+
+  useEffect(() => {
+    if (wardId) {
+      setSelectedUserWard(wardId[0])
+    }
+  }, [wardId])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,20 +111,25 @@ function ContactPageContent() {
         setSelectedProvince(province)
         setSelectedWard(ward)
 
-        if (militaryRegion) {
-          const contacts = await getContactsByMilitaryRegion(
-            parseInt(militaryRegion)
-          )
-          setData(contacts)
-        } else if (province) {
-          const contacts = await getContactsByProvince(parseInt(province))
-          setData(contacts)
-        } else if (ward) {
-          const contacts = await getContactsByWard(parseInt(ward))
+        if (selectedUserWard) {
+          const contacts = await getContactsByWard(selectedUserWard)
           setData(contacts)
         } else {
-          const contacts = await getContacts()
-          setData(contacts)
+          if (militaryRegion) {
+            const contacts = await getContactsByMilitaryRegion(
+              parseInt(militaryRegion)
+            )
+            setData(contacts)
+          } else if (province) {
+            const contacts = await getContactsByProvince(parseInt(province))
+            setData(contacts)
+          } else if (ward) {
+            const contacts = await getContactsByWard(parseInt(ward))
+            setData(contacts)
+          } else {
+            const contacts = await getContacts()
+            setData(contacts)
+          }
         }
       } catch (error) {
         console.error('Error fetching contacts:', error)
@@ -117,7 +139,7 @@ function ContactPageContent() {
     }
 
     fetchData()
-  }, [searchParams])
+  }, [searchParams, selectedUserWard])
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -193,11 +215,17 @@ function ContactPageContent() {
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
           btlhcm_lh_sdt_dd: '',
+          btlhcm_lh_hinhanh: '',
           btlhcm_lh_ngaytao: new Date(),
           btlhcm_lh_ngaycapnhat: new Date(),
         })
-        const newContact = await getContacts()
-        setData(newContact as Contact[])
+        if (selectedUserWard) {
+          const contacts = await getContactsByWard(selectedUserWard)
+          setData(contacts)
+        } else {
+          const newContact = await getContacts()
+          setData(newContact as Contact[])
+        }
       } else {
         console.error('Error saving contact:', response)
       }
@@ -217,6 +245,13 @@ function ContactPageContent() {
       if (response.ok) {
         setIsDeleteOpen(false)
         toast.success('Xóa liên hệ thành công!')
+        if (selectedUserWard) {
+          const contacts = await getContactsByWard(selectedUserWard)
+          setData(contacts)
+        } else {
+          const newContact = await getContacts()
+          setData(newContact as Contact[])
+        }
         const newContact = await getContacts()
         setData(newContact as Contact[])
       }
@@ -291,10 +326,8 @@ function ContactPageContent() {
           columns={getContactColumns(
             handleEdit,
             handleDelete,
-            hasAnyRole([
-              'Quản trị hệ thống (Super Admin)',
-              'Quản trị hệ thống (Admin)',
-            ])
+            canEdit,
+            canDelete
           )}
           data={data}
           onDataChange={handleDataChange}
@@ -302,6 +335,7 @@ function ContactPageContent() {
           userRole={roles.find((role) => role.btlhcm_vt_tenvt)?.btlhcm_vt_tenvt}
         />
       </div>
+      {/* Dialog Chỉnh sửa liên hệ */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
@@ -506,6 +540,21 @@ function ContactPageContent() {
                   </Select>
                 </div>
               )}
+
+              {/* Hình ảnh */}
+              {/* <div className="grid gap-3">
+                <Label htmlFor="image">Hình ảnh:</Label>
+                <Input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files ? e.target.files[0] : null
+                    setFormData({
+                      ...formData,
+                      btlhcm_lh_hinhanh: file?.name || '',
+                    })
+                  }}
+                />
+              </div> */}
             </div>
           </div>
 
@@ -573,6 +622,7 @@ function ContactPageContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Dialog Xóa liên hệ */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>

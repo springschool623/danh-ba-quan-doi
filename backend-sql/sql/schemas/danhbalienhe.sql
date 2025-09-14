@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS DanhBaLienHe (
     btlhcm_lh_sdt_ds VARCHAR(20) NULL,
     btlhcm_lh_sdt_qs VARCHAR(20) NULL,
     btlhcm_lh_sdt_dd VARCHAR(20) NULL UNIQUE,
+    btlhcm_lh_hinhanh VARCHAR(255) NULL,
     btlhcm_lh_ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     btlhcm_lh_ngaycapnhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
