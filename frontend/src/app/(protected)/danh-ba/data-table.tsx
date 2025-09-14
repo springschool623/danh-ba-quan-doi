@@ -106,18 +106,12 @@ export function DataTable<TData, TValue>({
   const [isLoading, setIsLoading] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
   const [isImportExportOpen, setIsImportExportOpen] = useState(false)
+  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
   const user = useUser()
   const permissions = usePermission(user as User)
   const canAdd = permissions.includes('ADD_CONTACT')
   const canExport = permissions.includes('EXPORT_CONTACT')
   const canImport = permissions.includes('IMPORT_CONTACT')
-
-  useEffect(() => {
-    console.log('permissions', permissions)
-    console.log('canAdd', canAdd)
-    console.log('canExport', canExport)
-    console.log('canImport', canImport)
-  }, [permissions])
 
   const [formData, setFormData] = useState({
     btlhcm_lh_hoten: '',
@@ -708,13 +702,14 @@ export function DataTable<TData, TValue>({
             </Button>
           )}
         </div>
-        {/* Thêm liên hệ */}
         <div className="flex items-center gap-4 py-4 ml-auto">
+          {/* Thêm liên hệ */}
           {canAdd && (
             <Button variant="edit" onClick={() => setIsAddContactOpen(true)}>
               Thêm liên hệ
             </Button>
           )}
+          {/* Nhập/Xuất File */}
           <DropdownMenu
             open={isImportExportOpen}
             onOpenChange={setIsImportExportOpen}
@@ -1216,6 +1211,14 @@ export function DataTable<TData, TValue>({
               Làm mới
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Thêm đơn vị */}
+      <Dialog open={isAddLocationOpen} onOpenChange={setIsAddLocationOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Thêm đơn vị</DialogTitle>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
     </>

@@ -327,7 +327,11 @@ function ContactPageContent() {
             handleEdit,
             handleDelete,
             canEdit,
-            canDelete
+            canDelete,
+            roles.find((role) => role.btlhcm_vt_tenvt)?.btlhcm_vt_tenvt ===
+              'User cấp trưởng' ||
+              roles.find((role) => role.btlhcm_vt_tenvt)?.btlhcm_vt_tenvt ===
+                'User'
           )}
           data={data}
           onDataChange={handleDataChange}

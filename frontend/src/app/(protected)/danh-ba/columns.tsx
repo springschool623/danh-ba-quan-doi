@@ -20,7 +20,8 @@ export const getContactColumns = (
   onEdit: (contact: Contact) => void,
   onDelete?: (contact: Contact) => void,
   canEdit?: boolean,
-  canDelete?: boolean
+  canDelete?: boolean,
+  isUser?: boolean
 ): ColumnDef<Contact>[] => {
   const columns: ColumnDef<Contact>[] = [
     {
@@ -108,19 +109,24 @@ export const getContactColumns = (
     //   enableSorting: false,
     //   enableHiding: false,
     // },
-    {
-      accessorKey: 'btlhcm_lh_ngaytao',
-      header: 'Ngày tạo',
-      cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaytao') as string),
-    },
-    {
-      accessorKey: 'btlhcm_lh_ngaycapnhat',
-      header: 'Ngày cập nhật',
-      cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_lh_ngaycapnhat') as string),
-    },
   ]
+
+  if (!isUser) {
+    columns.push(
+      {
+        accessorKey: 'btlhcm_lh_ngaytao',
+        header: 'Ngày tạo',
+        cell: ({ row }) =>
+          formatDate(row.getValue('btlhcm_lh_ngaytao') as string),
+      },
+      {
+        accessorKey: 'btlhcm_lh_ngaycapnhat',
+        header: 'Ngày cập nhật',
+        cell: ({ row }) =>
+          formatDate(row.getValue('btlhcm_lh_ngaycapnhat') as string),
+      }
+    )
+  }
 
   if (canEdit || canDelete) {
     columns.push({
