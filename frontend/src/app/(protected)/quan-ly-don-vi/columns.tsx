@@ -1,6 +1,6 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,22 +8,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
-import { formatDate } from '@/lib/utils'
-import { Location } from '@/types/locations'
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { formatDate } from "@/lib/utils";
+import { Location } from "@/types/locations";
 
 export const getLocationColumns = (
   onEdit: (location: Location) => void
 ): ColumnDef<Location>[] => {
   const columns: ColumnDef<Location>[] = [
     {
-      id: 'select',
+      id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
+            (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -40,48 +40,47 @@ export const getLocationColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'btlhcm_lh_malh',
-      header: 'STT',
+      accessorKey: "btlhcm_dv_madv",
+      header: "STT",
       cell: ({ row }) => row.index + 1,
     },
-
     {
-      accessorKey: 'btlhcm_dv_tendv',
-      header: 'Tên đơn vị',
+      accessorKey: "btlhcm_dv_tendv",
+      header: "Tên đơn vị",
     },
     {
-      accessorKey: 'btlhcm_dv_diachi',
-      header: 'Địa chỉ',
+      accessorKey: "btlhcm_dv_diachi",
+      header: "Địa chỉ",
     },
     {
-      accessorKey: 'btlhcm_px_tenpx',
-      header: 'Phường/xã',
+      accessorKey: "btlhcm_px_tenpx",
+      header: "Phường/xã",
     },
     {
-      accessorKey: 'btlhcm_tt_tentt',
-      header: 'Tỉnh/thành',
+      accessorKey: "btlhcm_tt_tentt",
+      header: "Tỉnh/thành",
     },
     {
-      accessorKey: 'btlhcm_qk_tenqk',
-      header: 'Quân khu',
+      accessorKey: "btlhcm_qk_tenqk",
+      header: "Quân khu",
     },
     {
-      accessorKey: 'btlhcm_dv_ngaytao',
-      header: 'Ngày tạo',
+      accessorKey: "btlhcm_dv_ngaytao",
+      header: "Ngày tạo",
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_dv_ngaytao') as string),
+        formatDate(row.getValue("btlhcm_dv_ngaytao") as string),
     },
     {
-      accessorKey: 'btlhcm_dv_ngaycapnhat',
-      header: 'Ngày cập nhật',
+      accessorKey: "btlhcm_dv_ngaycapnhat",
+      header: "Ngày cập nhật",
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_dv_ngaycapnhat') as string),
+        formatDate(row.getValue("btlhcm_dv_ngaycapnhat") as string),
     },
     {
-      id: 'actions',
-      header: 'Hành động',
+      id: "actions",
+      header: "Hành động",
       cell: ({ row }) => {
-        const location = row.original
+        const location = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -97,10 +96,10 @@ export const getLocationColumns = (
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
+  ];
 
-  return columns
-}
+  return columns;
+};

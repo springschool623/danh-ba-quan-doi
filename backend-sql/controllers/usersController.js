@@ -28,6 +28,10 @@ export const addUser = async (req, res) => {
       `INSERT INTO vaitronguoidung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt) VALUES ($1, $2)`,
       [btlhcm_nd_mand, 4]
     )
+    await pool.query(
+      `INSERT INTO quyentruycaptheokhuvuc (btlhcm_qtckv_mand, btlhcm_qtckv_maqk, btlhcm_qtckv_matt, btlhcm_qtckv_mapx) VALUES ($1, $2, $3, $4)`,
+      [btlhcm_nd_mand, null, 1, null]
+    )
   } else {
     console.log('Thêm người dùng thất bại!')
   }

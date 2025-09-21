@@ -141,7 +141,7 @@ export const updateContact = async (req, res) => {
     btlhcm_lh_sdt_dd,
   } = req.body
   const result = await pool.query(
-    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $12 WHERE btlhcm_lh_malh = $13',
+    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac,
@@ -223,10 +223,10 @@ export const importContactsFromExcel = async (req, res) => {
         row['ĐƠN VỊ']
       )
 
-      const sdtDs = row['SĐT DÂN SỰ']
-      const sdtQs = row['SĐT QUÂN SỰ']
-      const sdtDd = row['SĐT DI ĐỘNG']
-      const sdtFax = row['SỐ FAX']
+      const sdtDs = row['DÂN SỰ']
+      const sdtQs = row['QUÂN SỰ']
+      const sdtDd = row['DI ĐỘNG']
+      const sdtFax = row['FAX']
       console.log({
         hoten,
         capbacId,
@@ -243,7 +243,7 @@ export const importContactsFromExcel = async (req, res) => {
         `INSERT INTO danhbalienhe (
       btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
       btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
-      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax,
+      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [
           hoten,
@@ -297,7 +297,6 @@ export const exportExcel = async (req, res) => {
       'SĐT QUÂN SỰ': row.btlhcm_lh_sdt_qs,
       'SĐT DI ĐỘNG': row.btlhcm_lh_sdt_dd,
       'SỐ FAX': row.btlhcm_lh_sdt_fax,
-      'HÌNH ẢNH': row.btlhcm_lh_hinhanh,
     }))
 
     // Tạo worksheet từ json

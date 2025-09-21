@@ -6,6 +6,9 @@ export const userLogin = async (req, res) => {
   try {
     const { username, password } = req.body
 
+    console.log('username', username)
+    console.log('password', password)
+
     // Kiểm tra input có đầy đủ không
     if (!username || !password) {
       return res

@@ -14,7 +14,7 @@ const SEED_ORDER = [
   'capbac.seed.sql',
   'chucvu.seed.sql',
   'phongban.seed.sql',
-  'donvi.seed.sql',
+  // 'donvi.seed.sql',
   // 'danhbalienhe.seed.sql',
   'nguoidung.seed.sql',
   'vaitroquyenhan.seed.sql',
