@@ -4,8 +4,13 @@
 
 -- Dữ liệu mẫu bảng NguoiDung
 INSERT INTO NguoiDung (btlhcm_nd_mand, btlhcm_nd_matkhau, btlhcm_nd_trangthai, btlhcm_nd_ngaytao, btlhcm_nd_ngaycapnhat) VALUES
-('0912345678', 'admin123', TRUE, NOW(), NOW()),
-('0999999999', 'user456', TRUE, NOW(), NOW());
+('admin_btlhcm', 'admin123', TRUE, NOW(), NOW()),
+('admin2_btlhcm', 'admin111', TRUE, NOW(), NOW()),
+('admin_phuongbinhtay', 'admin456', TRUE, NOW(), NOW()),
+('admin_phuonghoahung', 'admin789', TRUE, NOW(), NOW()),
+('user1_btlhcm', 'user123', TRUE, NOW(), NOW()),
+('tnc_btlhcm', 'tnc123', TRUE, NOW(), NOW()),
+('user2_btlhcm', 'user456', TRUE, NOW(), NOW());
 
 -- Thông báo hoàn thành
 SELECT 'NguoiDung seed data inserted successfully!' as status;

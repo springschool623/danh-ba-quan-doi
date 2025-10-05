@@ -17,7 +17,6 @@ import { useEffect } from "react";
 import { getWards } from "@/services/ward.service";
 import { Ward } from "@/types/wards";
 import { userLogout } from "@/services/login.service";
-import useUserRoles from "@/hooks/useUserRoles";
 import useUser from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,16 +30,25 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { updateUser } from "@/services/user.service";
+import {
+  getUserPermissionByRole,
+  getUserRoles,
+  updateUser,
+} from "@/services/user.service";
 import { toast } from "sonner";
+import { Role } from "@/types/roles";
+import usePermission, { useWardPermission } from "@/hooks/usePermission";
+import { User } from "@/types/users";
 export function NavigationBar() {
   const [wards, setWards] = useState<Ward[]>([]);
   const [loading, setLoading] = useState(true);
-  const { roles, hasRole } = useUserRoles();
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [accountPassword, setAccountPassword] = useState("");
+  const [userRoles, setUserRoles] = useState<Role[]>([]);
   const user = useUser();
+  const permissions = usePermission(user as User);
+  const ward = useWardPermission(user as User);
 
   useEffect(() => {
     if (isAccountOpen && accountPassword === "") {
@@ -50,7 +58,15 @@ export function NavigationBar() {
   }, [isAccountOpen, accountPassword, user]);
 
   useEffect(() => {
-    console.log("Navbar user: ", user);
+    const fetchUserRoles = async () => {
+      if (!user) return;
+      const userRoles = await getUserRoles(user);
+      setUserRoles(userRoles);
+    };
+    fetchUserRoles();
+  }, [user, userRoles]);
+
+  useEffect(() => {
     const fetchWards = async () => {
       try {
         const wards = await getWards();
@@ -87,146 +103,81 @@ export function NavigationBar() {
   };
 
   // Kiểm tra vai trò của người dùng
-  const isAdmin = hasRole("Quản trị hệ thống (Super Admin)");
+  const isPermission = permissions.includes("MANAGE_ROLES");
 
   return (
     <div className="flex justify-between items-center py-4 border-b border-gray-200">
       {/* Navigation Menu bên trái */}
       <NavigationMenu>
         <NavigationMenuList>
-          {/* Trang chủ */}
-          {/* <NavigationMenuItem>
-            <NavigationMenuLink
-              asChild
-              className={navigationMenuTriggerStyle()}
-            >
-              <Link href="/danh-ba?tinhthanh=2">Trang chủ</Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem> */}
-          {/* Danh bạ Cấp Quân Khu */}
-          {/* <NavigationMenuItem>
-            <Link href="/danh-ba">
-              <NavigationMenuTrigger>
-                Danh bạ Cấp Quân Khu
-              </NavigationMenuTrigger>
-            </Link>
-            <NavigationMenuContent className="z-50">
-              <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                {loading ? (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Đang tải dữ liệu...
-                  </div>
-                ) : militaryRegions.length > 0 ? (
-                  militaryRegions.map((region) => (
-                    <NavigationMenuLink
-                      key={region.btlhcm_qk_tenqk}
-                      asChild
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                    >
-                      <Link href={`/danh-ba?quankhu=${region.btlhcm_qk_maqk}`}>
-                        <div className="text-sm font-medium leading-none">
-                          Danh bạ {region.btlhcm_qk_tenqk}
-                        </div>
-                        {region.btlhcm_qk_mota && (
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {region.btlhcm_qk_mota}
-                          </p>
-                        )}
-                      </Link>
-                    </NavigationMenuLink>
-                  ))
-                ) : (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Không có dữ liệu Quân khu
-                  </div>
-                )}
-              </div>
-            </NavigationMenuContent>
-          </NavigationMenuItem> */}
           {/* Danh bạ Thành phố Hồ Chí Minh */}
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              asChild
-              className={navigationMenuTriggerStyle()}
-            >
-              <Link href="/danh-ba?tinhthanh=1">Danh bạ BTL TPHCM</Link>
-            </NavigationMenuLink>
-            {/* <NavigationMenuTrigger>
-              Danh bạ Thành phố Hồ Chí Minh
-            </NavigationMenuTrigger>
-            <NavigationMenuContent className="z-50">
-              <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                {loading ? (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Đang tải dữ liệu...
-                  </div>
-                ) : provinces.length > 0 ? (
-                  provinces.map((province) => (
-                    <NavigationMenuLink
-                      key={province.btlhcm_tt_matt}
-                      asChild
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                    >
-                      <Link
-                        href={`/danh-ba?tinhthanh=${province.btlhcm_tt_matt}`}
-                      >
-                        <div className="text-sm font-medium leading-none">
-                          {province.btlhcm_tt_tentt}
-                        </div>
-                        {province.btlhcm_tt_mota && (
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {province.btlhcm_tt_mota}
-                          </p>
-                        )}
-                      </Link>
-                    </NavigationMenuLink>
-                  ))
-                ) : (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Không có dữ liệu Quân khu
-                  </div>
-                )}
-              </div>
-            </NavigationMenuContent> */}
-          </NavigationMenuItem>
+          {ward.wardId.length === 0 && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/danh-ba">Danh bạ BTL TPHCM</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
           {/* Danh bạ Cấp Phường */}
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Danh bạ Phường/Xã</NavigationMenuTrigger>
-            <NavigationMenuContent className="z-50">
-              <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                {loading ? (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Đang tải dữ liệu...
+          {ward.wardId.length === 0 && (
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Danh bạ Phường/Xã</NavigationMenuTrigger>
+              <NavigationMenuContent className="z-50">
+                <div className="w-[400px] md:w-[500px] lg:w-[600px] p-4">
+                  <div className="grid gap-3 md:grid-cols-2 max-h-[300px] overflow-y-auto pr-2">
+                    {loading ? (
+                      <div className="col-span-2 p-2 text-sm text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </div>
+                    ) : wards.length > 0 ? (
+                      wards.map((ward) => (
+                        <NavigationMenuLink
+                          key={ward.btlhcm_px_mapx}
+                          asChild
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <Link
+                            href={`/danh-ba?phuongxa=${ward.btlhcm_px_mapx}`}
+                          >
+                            <div className="text-sm font-medium leading-none">
+                              {ward.btlhcm_px_tenpx}
+                            </div>
+                            {ward.btlhcm_px_mota && (
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                {ward.btlhcm_px_mota}
+                              </p>
+                            )}
+                          </Link>
+                        </NavigationMenuLink>
+                      ))
+                    ) : (
+                      <div className="col-span-2 p-2 text-sm text-muted-foreground">
+                        Không có dữ liệu Quân khu
+                      </div>
+                    )}
                   </div>
-                ) : wards.length > 0 ? (
-                  wards.map((ward) => (
-                    <NavigationMenuLink
-                      key={ward.btlhcm_px_mapx}
-                      asChild
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                    >
-                      <Link href={`/danh-ba?phuongxa=${ward.btlhcm_px_mapx}`}>
-                        <div className="text-sm font-medium leading-none">
-                          {ward.btlhcm_px_tenpx}
-                        </div>
-                        {ward.btlhcm_px_mota && (
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {ward.btlhcm_px_mota}
-                          </p>
-                        )}
-                      </Link>
-                    </NavigationMenuLink>
-                  ))
-                ) : (
-                  <div className="col-span-2 p-2 text-sm text-muted-foreground">
-                    Không có dữ liệu Quân khu
-                  </div>
-                )}
-              </div>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          )}
+
+          {ward.wardId.length > 0 && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href={`/danh-ba?phuongxa=${ward.wardId}`}>
+                  Danh bạ {ward.wardName}
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
           {/* Phân quyền Người dùng () */}
-          {isAdmin && (
+          {isPermission && (
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild
@@ -235,6 +186,30 @@ export function NavigationBar() {
                 <Link href="/quan-ly-nguoi-dung">
                   Quản lý Người dùng (Quản trị hệ thống)
                 </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
+
+          {/* Danh sách Đơn vị */}
+          {isPermission && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/quan-ly-phuong-xa">Quản lý Phường/Xã</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
+
+          {/* Danh sách Đơn vị */}
+          {isPermission && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/quan-ly-don-vi">Quản lý Đơn vị</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           )}
@@ -324,8 +299,8 @@ export function NavigationBar() {
               <div className="grid gap-2 border-t pt-4">
                 <Label>Vai trò</Label>
                 <div className="flex flex-wrap gap-2">
-                  {roles?.length ? (
-                    roles.map((r) => (
+                  {userRoles?.length ? (
+                    userRoles.map((r) => (
                       <span
                         key={r.btlhcm_vt_mavt}
                         className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded"

@@ -42,12 +42,31 @@ export const addContact = async (contact: Contact): Promise<Response> => {
     body: JSON.stringify(contact),
   })
 
+  console.log('formData', contact)
+
   if (!response.ok) {
     throw new Error('Failed to add contact')
   }
   console.log('Thêm liên hệ thành công!')
 
   return response
+}
+
+export const uploadImage = async (file: File): Promise<string> => {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const response = await fetch(apiUrl('/api/contacts/upload-image'), {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    throw new Error('Upload image failed')
+  }
+
+  const data = await response.json()
+  return data.filePath // "/uploads/xxx.png"
 }
 
 export const updateContact = async (contact: Contact): Promise<Response> => {
@@ -79,5 +98,41 @@ export const deleteContact = async (contact: Contact): Promise<Response> => {
       method: 'DELETE',
     }
   )
+  return response
+}
+
+export const importContactsFromExcel = async (
+  file: File
+): Promise<Response> => {
+  const formData = new FormData()
+  formData.append('file', file) // 'file' phải trùng với tên field multer nhận ở backend
+
+  const response = await fetch(apiUrl('/api/contacts/import-excel'), {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    throw new Error('Nhập danh bạ thất bại')
+  }
+  console.log('Nhập danh bạ thành công!')
+  return response
+}
+
+export const exportExcel = async (): Promise<Response> => {
+  const response = await fetch(apiUrl('/api/contacts/export-excel'))
+  if (!response.ok) {
+    throw new Error('Xuất CSV thất bại')
+  }
+  window.location.href = apiUrl('/api/contacts/export-excel')
+  return response
+}
+
+export const exportVcard = async (): Promise<Response> => {
+  const response = await fetch(apiUrl('/api/contacts/export-vcard'))
+  if (!response.ok) {
+    throw new Error('Xuất VCard thất bại')
+  }
+  window.location.href = apiUrl('/api/contacts/export-vcard')
   return response
 }
