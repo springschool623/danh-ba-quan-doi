@@ -16,6 +16,7 @@ VALUES
 
 --User tổng có quyền xem danh bạ theo TPHCM
 ('user1_btlhcm', NULL, 1, NULL, NOW(), NOW()),
+('tnc_btlhcm', NULL, 1, NULL, NOW(), NOW()),
 
 --User đơn vị có quyền xem danh bạ theo Phường/Xã
 ('user2_btlhcm', NULL, NULL, 1, NOW(), NOW());

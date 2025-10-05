@@ -26,6 +26,7 @@ INSERT INTO VaiTroNguoiDung (btlhcm_vtnd_mand, btlhcm_vtnd_mavt, btlhcm_vtnd_nga
 ('admin_phuongbinhtay', 2, NOW(), NOW()),
 ('admin_phuonghoahung', 2, NOW(), NOW()),
 ('user1_btlhcm', 3, NOW(), NOW()),
+('tnc_btlhcm', 4, NOW(), NOW()),
 ('user2_btlhcm', 4, NOW(), NOW());
 
 -- Dữ liệu mẫu bảng QuyenHanVaiTro

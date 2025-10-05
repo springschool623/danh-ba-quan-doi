@@ -143,7 +143,7 @@ export const updateContact = async (req, res) => {
     btlhcm_lh_sdt_dd,
   } = req.body
   const result = await pool.query(
-    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $12 WHERE btlhcm_lh_malh = $13',
+    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
     [
       btlhcm_lh_hoten,
       btlhcm_lh_capbac,
@@ -299,7 +299,6 @@ export const exportExcel = async (req, res) => {
       'SĐT QUÂN SỰ': row.btlhcm_lh_sdt_qs,
       'SĐT DI ĐỘNG': row.btlhcm_lh_sdt_dd,
       'SỐ FAX': row.btlhcm_lh_sdt_fax,
-      'HÌNH ẢNH': row.btlhcm_lh_hinhanh,
     }))
 
     // Tạo worksheet từ json

@@ -44,7 +44,6 @@ export const getLocationColumns = (
       header: 'STT',
       cell: ({ row }) => row.index + 1,
     },
-
     {
       accessorKey: 'btlhcm_dv_tendv',
       header: 'Tên đơn vị',

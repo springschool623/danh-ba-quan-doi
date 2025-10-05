@@ -9,6 +9,7 @@ INSERT INTO NguoiDung (btlhcm_nd_mand, btlhcm_nd_matkhau, btlhcm_nd_trangthai, b
 ('admin_phuongbinhtay', 'admin456', TRUE, NOW(), NOW()),
 ('admin_phuonghoahung', 'admin789', TRUE, NOW(), NOW()),
 ('user1_btlhcm', 'user123', TRUE, NOW(), NOW()),
+('tnc_btlhcm', 'tnc123', TRUE, NOW(), NOW()),
 ('user2_btlhcm', 'user456', TRUE, NOW(), NOW());
 
 -- Thông báo hoàn thành
