@@ -192,6 +192,18 @@ export function NavigationBar() {
                 asChild
                 className={navigationMenuTriggerStyle()}
               >
+                <Link href="/quan-ly-phuong-xa">Quản lý Phường/Xã</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
+
+          {/* Danh sách Đơn vị */}
+          {isPermission && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
                 <Link href="/quan-ly-don-vi">Quản lý Đơn vị</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>

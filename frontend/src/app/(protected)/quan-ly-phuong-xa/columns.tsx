@@ -1,22 +1,21 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { MoreHorizontal } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { Location } from '@/types/locations'
+import { Ward } from '@/types/wards'
+import { ColumnDef } from '@tanstack/react-table'
+import { Checkbox } from '@/components/ui/checkbox'
 
-export const getLocationColumns = (
-  onEdit: (location: Location) => void
-): ColumnDef<Location>[] => {
-  const columns: ColumnDef<Location>[] = [
+export const getWardColumns = (
+  onEdit: (ward: Ward) => void
+): ColumnDef<Ward>[] => {
+  const columns: ColumnDef<Ward>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -40,48 +39,35 @@ export const getLocationColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'btlhcm_lh_madv',
-      header: 'STT',
+      accessorKey: 'btlhcm_px_mapx',
+      header: 'Mã phường/xã',
       cell: ({ row }) => row.index + 1,
-    },
-
-    {
-      accessorKey: 'btlhcm_dv_tendv',
-      header: 'Tên đơn vị',
-    },
-    {
-      accessorKey: 'btlhcm_dv_diachi',
-      header: 'Địa chỉ',
     },
     {
       accessorKey: 'btlhcm_px_tenpx',
-      header: 'Phường/xã',
+      header: 'Tên phường/xã',
     },
     {
       accessorKey: 'btlhcm_tt_tentt',
       header: 'Tỉnh/thành',
     },
     {
-      accessorKey: 'btlhcm_qk_tenqk',
-      header: 'Quân khu',
-    },
-    {
-      accessorKey: 'btlhcm_dv_ngaytao',
+      accessorKey: 'btlhcm_px_ngaytao',
       header: 'Ngày tạo',
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_dv_ngaytao') as string),
+        formatDate(row.getValue('btlhcm_px_ngaytao') as string),
     },
     {
-      accessorKey: 'btlhcm_dv_ngaycapnhat',
+      accessorKey: 'btlhcm_px_ngaycapnhat',
       header: 'Ngày cập nhật',
       cell: ({ row }) =>
-        formatDate(row.getValue('btlhcm_dv_ngaycapnhat') as string),
+        formatDate(row.getValue('btlhcm_px_ngaycapnhat') as string),
     },
     {
       id: 'actions',
       header: 'Hành động',
       cell: ({ row }) => {
-        const location = row.original
+        const ward = row.original
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -92,7 +78,7 @@ export const getLocationColumns = (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onEdit(location)}>
+              <DropdownMenuItem onClick={() => onEdit(ward)}>
                 Chỉnh sửa
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -101,6 +87,5 @@ export const getLocationColumns = (
       },
     },
   ]
-
   return columns
 }

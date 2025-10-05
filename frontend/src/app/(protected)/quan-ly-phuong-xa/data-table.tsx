@@ -37,10 +37,10 @@ import {
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import {
-  addLocation,
-  getLocations,
-  importLocationsFromExcel,
-} from '@/services/location.service'
+  importWardsFromExcel,
+  getWards,
+  addWard,
+} from '@/services/ward.service'
 import {
   Select,
   SelectItem,
@@ -49,7 +49,6 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { Ward } from '@/types/wards'
-import { getWards } from '@/services/ward.service'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -72,16 +71,14 @@ export function DataTable<TData, TValue>({
     {}
   )
   const [tableData, setTableData] = useState<TData[]>(data)
-  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
+  const [isAddWardOpen, setIsAddWardOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    btlhcm_dv_tendv: '',
-    btlhcm_dv_diachi: '',
-    btlhcm_dv_phuong: 0,
-    btlhcm_dv_tinhthanh: 1,
-    btlhcm_dv_quankhu: 7,
-    btlhcm_dv_ngaytao: new Date(),
-    btlhcm_dv_ngaycapnhat: new Date(),
+    btlhcm_px_tenpx: '',
+    btlhcm_px_mota: '',
+    btlhcm_px_tinhthanh: 1,
+    btlhcm_px_ngaytao: new Date(),
+    btlhcm_px_ngaycapnhat: new Date(),
   })
 
   const [wards, setWards] = useState<Ward[]>([])
@@ -160,16 +157,16 @@ export function DataTable<TData, TValue>({
     const file = await openFile()
     console.log('Import CSV', file)
     if (file) {
-      const response = await importLocationsFromExcel(file)
+      const response = await importWardsFromExcel(file)
       if (response.ok) {
         console.log('Import CSV thành công')
-        toast.success('Nhập danh bạ thành công!', {
+        toast.success('Nhập phường xã thành công!', {
           duration: 2000,
           position: 'top-right',
         })
       } else {
         console.log('Import CSV thất bại')
-        toast.error('Nhập danh bạ thất bại!', {
+        toast.error('Nhập phường xã thất bại!', {
           duration: 2000,
           position: 'top-right',
         })
@@ -178,28 +175,26 @@ export function DataTable<TData, TValue>({
     console.log('Import CSV')
   }
 
-  const handleAddLocation = async () => {
+  const handleAddWard = async () => {
     try {
       console.log('formData', formData)
-      const response = await addLocation(formData)
+      const response = await addWard(formData)
       if (response.ok) {
-        toast.success('Thêm đơn vị thành công!', {
+        toast.success('Thêm phường xã thành công!', {
           duration: 2000,
           position: 'top-right',
         })
-        setIsAddLocationOpen(false)
+        setIsAddWardOpen(false)
 
         setFormData({
-          btlhcm_dv_tendv: '',
-          btlhcm_dv_diachi: '',
-          btlhcm_dv_phuong: 0,
-          btlhcm_dv_tinhthanh: 1,
-          btlhcm_dv_quankhu: 7,
-          btlhcm_dv_ngaytao: new Date(),
-          btlhcm_dv_ngaycapnhat: new Date(),
+          btlhcm_px_tenpx: '',
+          btlhcm_px_mota: '',
+          btlhcm_px_tinhthanh: 1,
+          btlhcm_px_ngaytao: new Date(),
+          btlhcm_px_ngaycapnhat: new Date(),
         })
         setIsLoading(true)
-        const newLocation = await getLocations()
+        const newLocation = await getWards()
         setTableData(newLocation as TData[])
       }
     } catch (error) {
@@ -218,22 +213,20 @@ export function DataTable<TData, TValue>({
   }
 
   useEffect(() => {
-    if (!isAddLocationOpen) {
+    if (!isAddWardOpen) {
       setFormData({
-        btlhcm_dv_tendv: '',
-        btlhcm_dv_diachi: '',
-        btlhcm_dv_phuong: 0,
-        btlhcm_dv_tinhthanh: 1,
-        btlhcm_dv_quankhu: 7,
-        btlhcm_dv_ngaytao: new Date(),
-        btlhcm_dv_ngaycapnhat: new Date(),
+        btlhcm_px_tenpx: '',
+        btlhcm_px_mota: '',
+        btlhcm_px_tinhthanh: 1,
+        btlhcm_px_ngaytao: new Date(),
+        btlhcm_px_ngaycapnhat: new Date(),
       })
     }
-  }, [isAddLocationOpen])
+  }, [isAddWardOpen])
 
   // Create columns with custom filter function
   const columnsWithFilter = columns.map((column) => {
-    if ('accessorKey' in column && column.accessorKey === 'btlhcm_dv_tendv') {
+    if ('accessorKey' in column && column.accessorKey === 'btlhcm_px_tenpx') {
       return {
         ...column,
         filterFn: vietnameseFilter,
@@ -271,31 +264,31 @@ export function DataTable<TData, TValue>({
         {/* Lọc đơn vị */}
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Lọc theo tên đơn vị..."
+            placeholder="Lọc theo tên phường xã..."
             value={
               (table
-                .getColumn('btlhcm_dv_tendv')
+                .getColumn('btlhcm_px_tenpx')
                 ?.getFilterValue() as string) ?? ''
             }
             onChange={(event) =>
               table
-                .getColumn('btlhcm_dv_tendv')
+                .getColumn('btlhcm_px_tenpx')
                 ?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
           />
         </div>
-        {/* Thêm đơn vị */}
+        {/* Thêm phường xã */}
         <div className="flex items-center gap-2 py-4 ml-auto">
-          <Button variant="edit" onClick={() => setIsAddLocationOpen(true)}>
-            Thêm đơn vị
+          <Button variant="edit" onClick={() => setIsAddWardOpen(true)}>
+            Thêm phường xã
           </Button>
           <Button variant="outline" onClick={handleImportCSV}>
             Nhập file CSV (Excel)
           </Button>
         </div>
       </div>
-      {/* Hiển thị đơn vị */}
+      {/* Hiển thị phường xã */}
       {isLoading ? (
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="size-10 animate-spin" />
@@ -420,7 +413,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    Không có đơn vị.
+                    Không có phường xã.
                   </TableCell>
                 </TableRow>
               )}
@@ -453,7 +446,7 @@ export function DataTable<TData, TValue>({
         </Button>
       </div>
       {/* Dialog thêm đơn vị */}
-      <Dialog open={isAddLocationOpen} onOpenChange={setIsAddLocationOpen}>
+      <Dialog open={isAddWardOpen} onOpenChange={setIsAddWardOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Thêm đơn vị</DialogTitle>
@@ -469,80 +462,31 @@ export function DataTable<TData, TValue>({
                   id="name"
                   name="name"
                   placeholder="Đơn vị 001"
-                  value={formData.btlhcm_dv_tendv}
+                  value={formData.btlhcm_px_tenpx}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      btlhcm_dv_tendv: e.target.value,
+                      btlhcm_px_tenpx: e.target.value,
                     })
                   }
                 />
-              </div>
-              {/* Địa chỉ */}
-              <div className="grid gap-3 col-span-2">
-                <Label htmlFor="address">Địa chỉ:</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  placeholder="Địa chỉ đơn vị"
-                  value={formData.btlhcm_dv_diachi}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      btlhcm_dv_diachi: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              {/* Phường xã */}
-              <div className="grid gap-3 col-span-1">
-                <Label htmlFor="rank">Phường xã:</Label>
-                <Select
-                  value={
-                    formData.btlhcm_dv_phuong.toString() === '0'
-                      ? ''
-                      : formData.btlhcm_dv_phuong.toString()
-                  }
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData,
-                      btlhcm_dv_phuong: parseInt(value),
-                    })
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn Phường xã" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {wards.map((ward) => (
-                      <SelectItem
-                        key={ward.btlhcm_px_mapx}
-                        value={ward.btlhcm_px_mapx?.toString() || ''}
-                      >
-                        {ward.btlhcm_px_tenpx}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
 
           <DialogFooter className="mt-4">
-            <Button variant="edit" onClick={handleAddLocation}>
+            <Button variant="edit" onClick={handleAddWard}>
               Thêm
             </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setFormData({
-                  btlhcm_dv_tendv: '',
-                  btlhcm_dv_diachi: '',
-                  btlhcm_dv_phuong: 0,
-                  btlhcm_dv_tinhthanh: 1,
-                  btlhcm_dv_quankhu: 7,
-                  btlhcm_dv_ngaytao: new Date(),
-                  btlhcm_dv_ngaycapnhat: new Date(),
+                  btlhcm_px_tenpx: '',
+                  btlhcm_px_mota: '',
+                  btlhcm_px_tinhthanh: 1,
+                  btlhcm_px_ngaytao: new Date(),
+                  btlhcm_px_ngaycapnhat: new Date(),
                 })
               }}
             >

@@ -1,6 +1,8 @@
 import { pool } from '../db.js'
 import * as XLSX from 'xlsx'
 import fs from 'fs'
+import { getIdByName, normalizeKey } from '../utils.js'
+import { CONTACTS_COLUMN_MAP } from '../constants.js'
 
 // Lấy tất cả danh bạ
 export const getAllContacts = async (req, res) => {
@@ -171,104 +173,104 @@ export const deleteContact = async (req, res) => {
 }
 
 //Nhập danh bạ từ file Excel
-export const importContactsFromExcel = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Không có file upload' })
-    }
+// export const importContactsFromExcel = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: 'Không có file upload' })
+//     }
 
-    const filePath = req.file.path
-    // console.log('Uploaded file:', filePath)
+//     const filePath = req.file.path
+//     // console.log('Uploaded file:', filePath)
 
-    // Đọc file Excel qua buffer
-    const fileBuffer = fs.readFileSync(filePath)
-    const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-    const data = XLSX.utils.sheet_to_json(worksheet)
+//     // Đọc file Excel qua buffer
+//     const fileBuffer = fs.readFileSync(filePath)
+//     const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
+//     const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+//     const data = XLSX.utils.sheet_to_json(worksheet)
 
-    console.log('Excel data:', data)
+//     console.log('Excel data:', data)
 
-    // console.log('Excel data:', data)
+//     // console.log('Excel data:', data)
 
-    for (const row of data) {
-      const hoten = row['HỌ TÊN']
-      const capbacId = await getIdByName(
-        'btlhcm_cb_macb',
-        'capbac',
-        'btlhcm_cb_tencb',
-        row['CẤP BẬC']
-      )
-      const chucvuId = await getIdByName(
-        'btlhcm_cv_macv',
-        'chucvu',
-        'btlhcm_cv_tencv',
-        row['CHỨC VỤ']
-      )
-      const phongId = await getIdByName(
-        'btlhcm_pb_mapb',
-        'phong',
-        'btlhcm_pb_tenpb',
-        row['PHÒNG']
-      )
-      const banId = await getIdByName(
-        'btlhcm_ba_mab',
-        'ban',
-        'btlhcm_ba_tenb',
-        row['CƠ QUAN']
-      )
-      const donviId = await getIdByName(
-        'btlhcm_dv_madv',
-        'donvi',
-        'btlhcm_dv_tendv',
-        row['ĐƠN VỊ']
-      )
+//     for (const row of data) {
+//       const hoten = row[CONTACTS_COLUMN_MAP['hoten']]
+//       const capbacId = await getIdByName(
+//         'btlhcm_cb_macb',
+//         'capbac',
+//         'btlhcm_cb_tencb',
+//         row[CONTACTS_COLUMN_MAP['capbac']]
+//       )
+//       const chucvuId = await getIdByName(
+//         'btlhcm_cv_macv',
+//         'chucvu',
+//         'btlhcm_cv_tencv',
+//         row[CONTACTS_COLUMN_MAP['chucvu']]
+//       )
+//       const phongId = await getIdByName(
+//         'btlhcm_pb_mapb',
+//         'phong',
+//         'btlhcm_pb_tenpb',
+//         row[CONTACTS_COLUMN_MAP['phong']]
+//       )
+//       const banId = await getIdByName(
+//         'btlhcm_ba_mab',
+//         'ban',
+//         'btlhcm_ba_tenb',
+//         row['CƠ QUAN']
+//       )
+//       const donviId = await getIdByName(
+//         'btlhcm_dv_madv',
+//         'donvi',
+//         'btlhcm_dv_tendv',
+//         row['ĐƠN VỊ']
+//       )
 
-      const sdtDs = row['SĐT DÂN SỰ']
-      const sdtQs = row['SĐT QUÂN SỰ']
-      const sdtDd = row['SĐT DI ĐỘNG']
-      const sdtFax = row['SỐ FAX']
-      console.log({
-        hoten,
-        capbacId,
-        chucvuId,
-        phongId,
-        banId,
-        donviId,
-        sdtDs,
-        sdtQs,
-        sdtDd,
-      })
+//       const sdtDs = row['SĐT DÂN SỰ']
+//       const sdtQs = row['SĐT QUÂN SỰ']
+//       const sdtDd = row['SĐT DI ĐỘNG']
+//       const sdtFax = row['SỐ FAX']
+//       console.log({
+//         hoten,
+//         capbacId,
+//         chucvuId,
+//         phongId,
+//         banId,
+//         donviId,
+//         sdtDs,
+//         sdtQs,
+//         sdtDd,
+//       })
 
-      await pool.query(
-        `INSERT INTO danhbalienhe (
-      btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
-      btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
-      btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax,
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-        [
-          hoten,
-          capbacId,
-          chucvuId,
-          phongId,
-          banId,
-          donviId,
-          sdtDs,
-          sdtQs,
-          sdtDd,
-          sdtFax,
-        ]
-      )
-    }
+//       await pool.query(
+//         `INSERT INTO danhbalienhe (
+//       btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
+//       btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
+//       btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax
+//     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+//         [
+//           hoten,
+//           capbacId,
+//           chucvuId,
+//           phongId,
+//           banId,
+//           donviId,
+//           sdtDs,
+//           sdtQs,
+//           sdtDd,
+//           sdtFax,
+//         ]
+//       )
+//     }
 
-    // Xoá file tạm
-    fs.unlinkSync(filePath)
+//     // Xoá file tạm
+//     fs.unlinkSync(filePath)
 
-    res.json({ success: true, imported: data.length })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Lỗi khi import Excel' })
-  }
-}
+//     res.json({ success: true, imported: data.length })
+//   } catch (error) {
+//     console.error(error)
+//     res.status(500).json({ error: 'Lỗi khi import Excel' })
+//   }
+// }
 
 // Xuất Excel
 export const exportExcel = async (req, res) => {
@@ -378,13 +380,135 @@ export const exportVcard = async (req, res) => {
   }
 }
 
-// Lấy ID theo tên
-async function getIdByName(id, table, column, value) {
-  if (!value) return null
-  const result = await pool.query(
-    `SELECT ${id} FROM ${table} WHERE ${column} = $1 LIMIT 1`,
-    [value]
-  )
-  // console.log('ID:', result.rows[0][id])
-  return result.rows.length ? result.rows[0][id] : null
+export const importContactsFromExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Không có file upload' })
+    }
+
+    const filePath = req.file.path
+
+    // Đọc file Excel
+    const fileBuffer = fs.readFileSync(filePath)
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+
+    // Lấy raw data: mảng 2D
+    const rawData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      defval: '',
+    })
+
+    if (rawData.length < 2) {
+      return res.status(400).json({ error: 'File Excel không có dữ liệu' })
+    }
+
+    // Hàng đầu tiên là header
+    const headers = rawData[0].map((h) => normalizeKey(h))
+    console.log('headers', headers)
+
+    // Convert thành mảng object với key chuẩn
+    const rows = rawData.slice(1).map((row) => {
+      const obj = {}
+      headers.forEach((h, i) => {
+        if (CONTACTS_COLUMN_MAP[h]) {
+          obj[CONTACTS_COLUMN_MAP[h]] = row[i]
+        }
+      })
+      return obj
+    })
+
+    console.log('Excel rows:', rows)
+
+    let importedCount = 0
+
+    for (const row of rows) {
+      if (!row.hoten) continue
+
+      const hoten = row.hoten
+
+      const capbacId = await getIdByName(
+        'btlhcm_cb_macb',
+        'capbac',
+        'btlhcm_cb_tencb',
+        row.capbac
+      )
+
+      const chucvuId = await getIdByName(
+        'btlhcm_cv_macv',
+        'chucvu',
+        'btlhcm_cv_tencv',
+        row.chucvu
+      )
+
+      const phongId = await getIdByName(
+        'btlhcm_pb_mapb',
+        'phong',
+        'btlhcm_pb_tenpb',
+        row.phong
+      )
+
+      const banId = await getIdByName(
+        'btlhcm_ba_mab',
+        'ban',
+        'btlhcm_ba_tenb',
+        row.ban
+      )
+
+      const donviId = await getIdByName(
+        'btlhcm_dv_madv',
+        'donvi',
+        'btlhcm_dv_tendv',
+        row.donvi
+      )
+
+      const sdtDs = row.sdtDs
+      const sdtQs = row.sdtQs
+      const sdtDd = row.sdtDd
+      const sdtFax = row.sdtFax
+
+      console.log({
+        hoten,
+        capbacId,
+        chucvuId,
+        phongId,
+        banId,
+        donviId,
+        sdtDs,
+        sdtQs,
+        sdtDd,
+        sdtFax,
+      })
+
+      await pool.query(
+        `INSERT INTO danhbalienhe (
+          btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu,
+          btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi,
+          btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_dd, btlhcm_lh_sdt_fax
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [
+          hoten,
+          capbacId,
+          chucvuId,
+          phongId,
+          banId,
+          donviId,
+          sdtDs,
+          sdtQs,
+          sdtDd,
+          sdtFax,
+        ]
+      )
+
+      importedCount++
+    }
+
+    // Xoá file tạm
+    fs.unlinkSync(filePath)
+
+    res.json({ success: true, imported: importedCount })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Lỗi khi import Excel' })
+  }
 }

@@ -293,6 +293,9 @@ export function DataTable<TData, TValue>({
           <Button variant="outline" onClick={handleImportCSV}>
             Nhập file CSV (Excel)
           </Button>
+          <Button variant="outline" onClick={handleImportCSV}>
+            Nhập file CSV (Excel)
+          </Button>
         </div>
       </div>
       {/* Hiển thị đơn vị */}

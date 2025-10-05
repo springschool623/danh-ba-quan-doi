@@ -41,3 +41,21 @@ export const updateLocation = async (location: Location): Promise<Response> => {
   console.log('Cập nhật đơn vị thành công!')
   return response
 }
+
+export const importLocationsFromExcel = async (
+  file: File
+): Promise<Response> => {
+  const formData = new FormData()
+  formData.append('file', file) // 'file' phải trùng với tên field multer nhận ở backend
+
+  const response = await fetch(apiUrl('/api/locations/import-excel'), {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    throw new Error('Nhập đơn vị thất bại')
+  }
+  console.log('Nhập đơn vị thành công!')
+  return response
+}

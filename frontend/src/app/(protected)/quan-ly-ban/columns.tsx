@@ -40,7 +40,7 @@ export const getLocationColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'btlhcm_lh_madv',
+      accessorKey: 'btlhcm_lh_malh',
       header: 'STT',
       cell: ({ row }) => row.index + 1,
     },

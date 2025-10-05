@@ -1,4 +1,8 @@
 import { pool } from '../db.js'
+import * as XLSX from 'xlsx'
+import fs from 'fs'
+import { getIdByName, normalizeKey } from '../utils.js'
+import { LOCATIONS_COLUMN_MAP } from '../constants.js'
 
 export const getAllLocations = async (req, res) => {
   const result = await pool.query(`
@@ -47,4 +51,102 @@ export const updateLocation = async (req, res) => {
     ]
   )
   res.json(result.rows)
+}
+
+//Nhập địa chỉ từ file Excel
+export const importLocationsFromExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Không có file upload' })
+    }
+
+    const filePath = req.file.path
+
+    // Đọc file Excel
+    const fileBuffer = fs.readFileSync(filePath)
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+
+    // Lấy raw data: mảng 2D
+    const rawData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      defval: '',
+    })
+
+    if (rawData.length < 2) {
+      return res.status(400).json({ error: 'File Excel không có dữ liệu' })
+    }
+
+    // Hàng đầu tiên là header
+    const headers = rawData[0].map((h) => normalizeKey(h))
+    console.log('headers', headers)
+
+    // Convert thành mảng object với key chuẩn
+    const rows = rawData.slice(1).map((row) => {
+      const obj = {}
+      headers.forEach((h, i) => {
+        if (LOCATIONS_COLUMN_MAP[h]) {
+          obj[LOCATIONS_COLUMN_MAP[h]] = row[i]
+        }
+      })
+      return obj
+    })
+
+    console.log('Excel rows:', rows)
+
+    let importedCount = 0
+
+    for (const row of rows) {
+      if (!row.tendonvi) continue
+
+      const tendonvi = row.tendonvi
+      const diachi = row.diachi
+
+      const phuongId = await getIdByName(
+        'btlhcm_px_mapx',
+        'phuongxa',
+        'btlhcm_px_tenpx',
+        row.phuong
+      )
+
+      const tinhthanhId = await getIdByName(
+        'btlhcm_tt_matt',
+        'tinhthanh',
+        'btlhcm_tt_tentt',
+        row.tinhthanh
+      )
+
+      const quankhuId = await getIdByName(
+        'btlhcm_qk_maqk',
+        'quankhu',
+        'btlhcm_qk_tenqk',
+        row.quankhu
+      )
+
+      console.log('Dữ liệu insert:', {
+        tendonvi,
+        diachi,
+        phuongId,
+        tinhthanhId,
+        quankhuId,
+      })
+
+      await pool.query(
+        `INSERT INTO donvi (
+          btlhcm_dv_tendv, btlhcm_dv_diachi, btlhcm_dv_phuong, btlhcm_dv_tinhthanh, btlhcm_dv_quankhu
+        ) VALUES ($1,$2,$3,$4,$5)`,
+        [tendonvi, diachi, phuongId, tinhthanhId, quankhuId]
+      )
+
+      importedCount++
+    }
+
+    // Xoá file tạm
+    fs.unlinkSync(filePath)
+
+    res.json({ success: true, imported: importedCount })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Lỗi khi import Excel' })
+  }
 }
