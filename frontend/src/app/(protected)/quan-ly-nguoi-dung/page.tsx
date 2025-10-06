@@ -28,12 +28,19 @@ import { toast } from 'sonner'
 import { getRoles } from '@/services/role.service'
 import { Role } from '@/types/roles'
 import { Switch } from '@/components/ui/switch'
+import {
+  getWards,
+  getWardByUser,
+  setWardByUserRole,
+} from '@/services/ward.service'
+import { Ward } from '@/types/wards'
 
 export default function RolePage() {
   const [data, setData] = useState<User[]>([])
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false)
+  const [isSetWardByUserRoleOpen, setIsSetWardByUserRoleOpen] = useState(false)
   const [formData, setFormData] = useState<User>({
     btlhcm_nd_mand: '',
     btlhcm_nd_matkhau: '',
@@ -44,6 +51,10 @@ export default function RolePage() {
   })
   const [roles, setRoles] = useState<Role[]>([])
   const [selectedRoles, setSelectedRoles] = useState<{
+    [key: string]: boolean
+  }>({})
+  const [wards, setWards] = useState<Ward[]>([])
+  const [selectedWards, setSelectedWards] = useState<{
     [key: string]: boolean
   }>({})
   const { hasAnyRole } = useUserRoles()
@@ -185,6 +196,76 @@ export default function RolePage() {
     }
   }
 
+  const handleSetWardByUserRole = (user: User) => {
+    setIsSetWardByUserRoleOpen(true)
+    setFormData(user)
+
+    const fetchWardsAndUserWards = async () => {
+      try {
+        // Lấy toàn bộ wards
+        const allWards = await getWards()
+        setWards(allWards)
+
+        // Lấy wards hiện tại của user được chọn
+        const currentUserWards = await getWardByUser(user)
+        const initialSelectedWards: { [key: string]: boolean } = {}
+
+        allWards.forEach((ward) => {
+          const wardId = ward.btlhcm_px_mapx?.toString() ?? ''
+          // Kiểm tra xem ward có trong danh sách wards hiện tại của user không
+          initialSelectedWards[wardId] = currentUserWards.some(
+            (userWard: Ward) => userWard.btlhcm_px_mapx?.toString() === wardId
+          )
+        })
+
+        setSelectedWards(initialSelectedWards)
+      } catch (error) {
+        console.error('Error fetching wards:', error)
+        toast.error('Có lỗi xảy ra khi tải danh sách phường/xã!')
+      }
+    }
+
+    fetchWardsAndUserWards()
+  }
+
+  const handleSetWardPermissions = async () => {
+    console.log(
+      'Cập nhật quyền truy cập phường/xã cho người dùng: ',
+      selectedWards
+    )
+    try {
+      // Lấy danh sách ward được chọn
+      const selectedWardIds = Object.keys(selectedWards).filter(
+        (key) => selectedWards[key]
+      )
+
+      console.log('Ward được chọn:', selectedWardIds)
+
+      // Gọi API để cập nhật quyền truy cập ward cho người dùng
+      const response = await setWardByUserRole(formData, selectedWardIds)
+
+      if (response.ok) {
+        setIsSetWardByUserRoleOpen(false)
+        toast.success(
+          'Cập nhật quyền truy cập phường/xã cho người dùng thành công!'
+        )
+
+        // Reset selectedWards
+        setSelectedWards({})
+
+        // Cập nhật danh sách người dùng
+        const newUser = await getUsers()
+        setData(newUser as User[])
+      } else {
+        console.error('Error updating ward permissions for user:', response)
+        toast.error('Có lỗi xảy ra khi cập nhật quyền truy cập phường/xã!')
+      }
+    } catch (error) {
+      console.error('Error updating ward permissions for user:', error)
+      toast.error('Có lỗi xảy ra khi cập nhật quyền truy cập phường/xã!')
+    }
+  }
+
   useEffect(() => {
     const fetchRoles = async () => {
       const roles = await getRoles()
@@ -195,15 +276,16 @@ export default function RolePage() {
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      {/* <Suspense fallback={<div>Loading...</div>}>
         <PageBreadcrumb label="Quản lý Người dùng (Quản trị hệ thống)" />
-      </Suspense>
+      </Suspense> */}
 
       <DataTable
         columns={getUserColumns(
           handleEdit,
           handleDelete,
           handleAddRole,
+          handleSetWardByUserRole,
           hasAnyRole([
             'Quản trị hệ thống (Super Admin)',
             'Quản trị hệ thống (Admin)',
@@ -368,6 +450,77 @@ export default function RolePage() {
             </Button>
             <Button variant="edit" onClick={handleAddRolesToUser}>
               Cập nhật vai trò
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isSetWardByUserRoleOpen}
+        onOpenChange={setIsSetWardByUserRoleOpen}
+      >
+        <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Cập nhật quyền truy cập theo phường/xã cho người dùng
+            </DialogTitle>
+            <DialogDescription>
+              Bật/tắt các quyền truy cập phường/xã cho người dùng. Phường/xã có
+              badge &quot;Đã có quyền&quot; là phường/xã hiện tại người dùng có
+              quyền truy cập.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t pt-4">
+            <h5 className="text-md font-semibold mb-4">Danh sách phường/xã:</h5>
+            <div className="grid grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto">
+              {wards.map((ward) => {
+                const wardId = ward.btlhcm_px_mapx?.toString() ?? ''
+                const isCurrentlyAssigned = !!selectedWards[wardId]
+
+                return (
+                  <div
+                    key={ward.btlhcm_px_mapx}
+                    className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Switch
+                        id={`ward-${wardId}`}
+                        checked={!!selectedWards[wardId]}
+                        onCheckedChange={(checked) => {
+                          setSelectedWards((prev) => ({
+                            ...prev,
+                            [wardId]: checked,
+                          }))
+                        }}
+                      />
+                      <Label
+                        htmlFor={`ward-${wardId}`}
+                        className="font-medium text-sm text-center"
+                      >
+                        {ward.btlhcm_px_tenpx}
+                      </Label>
+                    </div>
+                    {isCurrentlyAssigned && (
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                        Đã có quyền
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500 mt-1">
+                      {selectedWards[wardId] ? 'Bật' : 'Tắt'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="default"
+              onClick={() => setIsSetWardByUserRoleOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button variant="edit" onClick={handleSetWardPermissions}>
+              Cập nhật quyền truy cập
             </Button>
           </DialogFooter>
         </DialogContent>

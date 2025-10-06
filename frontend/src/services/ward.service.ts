@@ -52,3 +52,24 @@ export const importWardsFromExcel = async (file: File): Promise<Response> => {
   console.log('Nhập phường xã thành công!')
   return response
 }
+
+export const setWardByUserRole = async (
+  user: User,
+  wardIds: string[]
+): Promise<Response> => {
+  const response = await fetch(
+    apiUrl(`/api/wards/set-ward-by-user-role/${user.btlhcm_nd_mand}`),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ wards: wardIds }),
+    }
+  )
+  if (!response.ok) {
+    throw new Error('Failed to set ward by user role')
+  }
+  console.log('Cập nhật quyền truy cập thành công!')
+  return response
+}

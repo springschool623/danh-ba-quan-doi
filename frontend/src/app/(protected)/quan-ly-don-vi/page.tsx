@@ -95,9 +95,9 @@ export default function RolePage() {
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      {/* <Suspense fallback={<div>Loading...</div>}>
         <PageBreadcrumb label="Quản lý Đơn vị (Quản trị hệ thống)" />
-      </Suspense>
+      </Suspense> */}
 
       <DataTable columns={getLocationColumns(handleEdit)} data={data} />
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

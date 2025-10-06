@@ -40,14 +40,29 @@ export const getWardByUser = async (req, res) => {
 
 //Set quyền truy cập danh bạ theo Phường/Xã
 export const setWardByUserRole = async (req, res) => {
-  const { btlhcm_nd_mand, btlhcm_px_mapx } = req.params
-  const result = await pool.query(
-    `
-    INSERT INTO QuyenTruyCapTheoKhuVuc (btlhcm_qtckv_mand, btlhcm_qtckv_mapx) VALUES ($1, $2)
-  `,
-    [btlhcm_nd_mand, btlhcm_px_mapx]
-  )
-  res.json(result.rows)
+  const { btlhcm_nd_mand } = req.params
+  const { wards } = req.body
+  try {
+    // Xóa tất cả quyền truy cập hiện tại của user
+    await pool.query(
+      `DELETE FROM QuyenTruyCapTheoKhuVuc WHERE btlhcm_qtckv_mand = $1`,
+      [btlhcm_nd_mand]
+    )
+
+    // Thêm các quyền truy cập mới
+    for (const ward of wards) {
+      await pool.query(
+        `INSERT INTO QuyenTruyCapTheoKhuVuc (btlhcm_qtckv_mand, btlhcm_qtckv_mapx) VALUES ($1, $2)`,
+        [btlhcm_nd_mand, ward]
+      )
+    }
+
+    // Trả về response thành công
+    res.json({ message: 'Cập nhật quyền truy cập thành công', wards: wards })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Lỗi khi cập nhật quyền truy cập' })
+  }
 }
 
 export const addWard = async (req, res) => {

@@ -94,10 +94,15 @@ function ContactPageContent() {
   const canDelete = permissions.includes('DELETE_CONTACT')
 
   useEffect(() => {
-    if (wardId) {
+    const wardParam = searchParams.get('phuongxa')
+    if (wardParam && wardId.includes(parseInt(wardParam))) {
+      // Nếu có params ward và user có quyền truy cập ward đó
+      setSelectedUserWard(parseInt(wardParam))
+    } else if (wardId.length > 0) {
+      // Nếu không có params hoặc không có quyền, lấy ward đầu tiên
       setSelectedUserWard(wardId[0])
     }
-  }, [wardId])
+  }, [wardId, searchParams])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,10 +116,12 @@ function ContactPageContent() {
         setSelectedProvince(province)
         setSelectedWard(ward)
 
-        if (selectedUserWard) {
-          const contacts = await getContactsByWard(selectedUserWard)
+        // Nếu user có quyền hạn chế (chỉ xem được ward của mình)
+        if (wardId.length > 0) {
+          const contacts = await getContactsByWard(selectedUserWard!)
           setData(contacts)
         } else {
+          // User có quyền xem tất cả, lấy theo params
           if (militaryRegion) {
             const contacts = await getContactsByMilitaryRegion(
               parseInt(militaryRegion)
@@ -139,7 +146,7 @@ function ContactPageContent() {
     }
 
     fetchData()
-  }, [searchParams, selectedUserWard])
+  }, [searchParams, selectedUserWard, wardId.length])
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -219,8 +226,8 @@ function ContactPageContent() {
           btlhcm_lh_ngaytao: new Date(),
           btlhcm_lh_ngaycapnhat: new Date(),
         })
-        if (selectedUserWard) {
-          const contacts = await getContactsByWard(selectedUserWard)
+        if (wardId.length > 0) {
+          const contacts = await getContactsByWard(selectedUserWard!)
           setData(contacts)
         } else {
           const newContact = await getContacts()
@@ -245,15 +252,13 @@ function ContactPageContent() {
       if (response.ok) {
         setIsDeleteOpen(false)
         toast.success('Xóa liên hệ thành công!')
-        if (selectedUserWard) {
-          const contacts = await getContactsByWard(selectedUserWard)
+        if (wardId.length > 0) {
+          const contacts = await getContactsByWard(selectedUserWard!)
           setData(contacts)
         } else {
           const newContact = await getContacts()
           setData(newContact as Contact[])
         }
-        const newContact = await getContacts()
-        setData(newContact as Contact[])
       }
     } catch (error) {
       console.error('Error deleting contact:', error)
@@ -294,7 +299,7 @@ function ContactPageContent() {
 
   return (
     <>
-      <PageBreadcrumb label={getBreadcrumbLabel()} />
+      {/* <PageBreadcrumb label={getBreadcrumbLabel()} /> */}
       <div className="py-5">
         {selectedRegion && data.length > 0 && (
           <div className="mb-4 p-3 bg-green-50 border border-green-800 rounded-md">

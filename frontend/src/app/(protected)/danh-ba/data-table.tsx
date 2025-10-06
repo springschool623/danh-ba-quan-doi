@@ -713,34 +713,36 @@ export function DataTable<TData, TValue>({
             </Button>
           )}
           {/* Nhập/Xuất File */}
-          <DropdownMenu
-            open={isImportExportOpen}
-            onOpenChange={setIsImportExportOpen}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <span>Nhập/Xuất File</span>
-                <ArrowDownIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="flex flex-col gap-2">
-              {canImport && (
-                <Button variant="ghost" onClick={handleImportCSV}>
-                  Nhập file CSV (Excel)
+          {canAdd && (
+            <DropdownMenu
+              open={isImportExportOpen}
+              onOpenChange={setIsImportExportOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <span>Nhập/Xuất File</span>
+                  <ArrowDownIcon className="size-4" />
                 </Button>
-              )}
-              {canExport && (
-                <Button variant="ghost" onClick={handleExportCSV}>
-                  Xuất file CSV (Excel)
-                </Button>
-              )}
-              {canExport && (
-                <Button variant="ghost" onClick={handleExportVCard}>
-                  Xuất file VCard (VCF)
-                </Button>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="flex flex-col gap-2">
+                {canImport && (
+                  <Button variant="ghost" onClick={handleImportCSV}>
+                    Nhập file CSV (Excel)
+                  </Button>
+                )}
+                {canExport && (
+                  <Button variant="ghost" onClick={handleExportCSV}>
+                    Xuất file CSV (Excel)
+                  </Button>
+                )}
+                {canExport && (
+                  <Button variant="ghost" onClick={handleExportVCard}>
+                    Xuất file VCard (VCF)
+                  </Button>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
       {/* Hiển thị danh bạ */}

@@ -24,7 +24,6 @@ import { updateWard } from '@/services/ward.service'
 export default function RolePage() {
   const [data, setData] = useState<Ward[]>([])
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [formData, setFormData] = useState<Ward>({
     btlhcm_px_tenpx: '',
     btlhcm_px_mota: '',
@@ -33,7 +32,6 @@ export default function RolePage() {
     btlhcm_px_ngaycapnhat: new Date(),
   })
 
-  const [isAddWardOpen, setIsAddWardOpen] = useState(false)
   const [wards, setWards] = useState<Ward[]>([])
 
   useEffect(() => {

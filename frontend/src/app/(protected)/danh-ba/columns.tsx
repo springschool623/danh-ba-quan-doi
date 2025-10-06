@@ -65,7 +65,7 @@ export const getContactColumns = (
     },
     {
       accessorKey: 'btlhcm_ba_tenb',
-      header: 'Cơ quan',
+      header: 'Ban',
     },
     {
       accessorKey: 'btlhcm_pb_tenpb',

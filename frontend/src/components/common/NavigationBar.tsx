@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import * as React from "react";
-import Link from "next/link";
+import * as React from 'react'
+import Link from 'next/link'
 
 import {
   NavigationMenu,
@@ -11,14 +11,14 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { useState } from "react";
-import { useEffect } from "react";
-import { getWards } from "@/services/ward.service";
-import { Ward } from "@/types/wards";
-import { userLogout } from "@/services/login.service";
-import useUser from "@/hooks/useUser";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/navigation-menu'
+import { useState } from 'react'
+import { useEffect } from 'react'
+import { getWards } from '@/services/ward.service'
+import { Ward } from '@/types/wards'
+import { userLogout } from '@/services/login.service'
+import useUser from '@/hooks/useUser'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -26,84 +26,84 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Eye, EyeOff } from 'lucide-react'
 import {
   getUserPermissionByRole,
   getUserRoles,
   updateUser,
-} from "@/services/user.service";
-import { toast } from "sonner";
-import { Role } from "@/types/roles";
-import usePermission, { useWardPermission } from "@/hooks/usePermission";
-import { User } from "@/types/users";
+} from '@/services/user.service'
+import { toast } from 'sonner'
+import { Role } from '@/types/roles'
+import usePermission, { useWardPermission } from '@/hooks/usePermission'
+import { User } from '@/types/users'
 export function NavigationBar() {
-  const [wards, setWards] = useState<Ward[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [accountPassword, setAccountPassword] = useState("");
-  const [userRoles, setUserRoles] = useState<Role[]>([]);
-  const user = useUser();
-  const permissions = usePermission(user as User);
-  const ward = useWardPermission(user as User);
+  const [wards, setWards] = useState<Ward[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [accountPassword, setAccountPassword] = useState('')
+  const [userRoles, setUserRoles] = useState<Role[]>([])
+  const user = useUser()
+  const permissions = usePermission(user as User)
+  const ward = useWardPermission(user as User)
 
   useEffect(() => {
-    if (isAccountOpen && accountPassword === "") {
-      setAccountPassword(user?.btlhcm_nd_matkhau ?? "");
-      setShowPassword(false);
+    if (isAccountOpen && accountPassword === '') {
+      setAccountPassword(user?.btlhcm_nd_matkhau ?? '')
+      setShowPassword(false)
     }
-  }, [isAccountOpen, accountPassword, user]);
+  }, [isAccountOpen, accountPassword, user])
 
   useEffect(() => {
     const fetchUserRoles = async () => {
-      if (!user) return;
-      const userRoles = await getUserRoles(user);
-      setUserRoles(userRoles);
-    };
-    fetchUserRoles();
-  }, [user, userRoles]);
+      if (!user) return
+      const userRoles = await getUserRoles(user)
+      setUserRoles(userRoles)
+    }
+    fetchUserRoles()
+  }, [user, userRoles])
 
   useEffect(() => {
     const fetchWards = async () => {
       try {
-        const wards = await getWards();
-        setWards(wards);
+        const wards = await getWards()
+        setWards(wards)
       } catch (error) {
-        console.error("Error fetching wards:", error);
+        console.error('Error fetching wards:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchWards();
-  }, []);
+    fetchWards()
+  }, [])
 
   const handleChangePassword = async () => {
-    if (!user?.btlhcm_nd_mand) return;
+    if (!user?.btlhcm_nd_mand) return
     try {
-      console.log("Password: ", accountPassword);
+      console.log('Password: ', accountPassword)
       const res = await updateUser({
         btlhcm_nd_mand: user.btlhcm_nd_mand,
         btlhcm_nd_matkhau: accountPassword,
-      });
+      })
       if (res.ok) {
-        toast.success("Cập nhật mật khẩu thành công");
-        setIsAccountOpen(false);
-        setAccountPassword(accountPassword);
+        toast.success('Cập nhật mật khẩu thành công')
+        setIsAccountOpen(false)
+        setAccountPassword(accountPassword)
       } else {
-        toast.error("Cập nhật mật khẩu thất bại");
+        toast.error('Cập nhật mật khẩu thất bại')
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Có lỗi xảy ra khi cập nhật mật khẩu");
+      console.error(error)
+      toast.error('Có lỗi xảy ra khi cập nhật mật khẩu')
     }
-  };
+  }
 
   // Kiểm tra vai trò của người dùng
-  const isPermission = permissions.includes("MANAGE_ROLES");
+  const isPermission = permissions.includes('MANAGE_ROLES')
 
   return (
     <div className="flex justify-between items-center py-4 border-b border-gray-200">
@@ -166,16 +166,44 @@ export function NavigationBar() {
 
           {ward.wardId.length > 0 && (
             <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href={`/danh-ba?phuongxa=${ward.wardId}`}>
-                  Danh bạ {ward.wardName}
-                </Link>
-              </NavigationMenuLink>
+              {ward.wardId.length === 1 ? (
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href={`/danh-ba?phuongxa=${ward.wardId[0]}`}>
+                    Danh bạ {ward.wardName[0]}
+                  </Link>
+                </NavigationMenuLink>
+              ) : (
+                <>
+                  <NavigationMenuTrigger>
+                    Danh bạ Phường/Xã
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="z-50">
+                    <div className="w-[400px] p-4">
+                      <div className="grid gap-3 md:grid-cols-2 max-h-[300px] overflow-y-auto pr-2">
+                        {ward.wardId.map((wardId, index) => (
+                          <NavigationMenuLink
+                            key={wardId}
+                            asChild
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <Link href={`/danh-ba?phuongxa=${wardId}`}>
+                              <div className="text-sm font-medium leading-none">
+                                {ward.wardName[index]}
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        ))}
+                      </div>
+                    </div>
+                  </NavigationMenuContent>
+                </>
+              )}
             </NavigationMenuItem>
           )}
+
           {/* Phân quyền Người dùng () */}
           {isPermission && (
             <NavigationMenuItem>
@@ -213,11 +241,25 @@ export function NavigationBar() {
               </NavigationMenuLink>
             </NavigationMenuItem>
           )}
+
+          {/* Quản lý thông tin chung */}
+          {isPermission && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/quan-ly-thong-tin-chung">
+                  Quản lý thông tin chung
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
 
       {/* Nút Đăng xuất bên phải */}
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         {/* Thông tin người dùng */}
         <Button
           variant="outline"
@@ -236,13 +278,13 @@ export function NavigationBar() {
                 <Link
                   href="/"
                   onClick={async (e) => {
-                    e.preventDefault();
+                    e.preventDefault()
                     try {
-                      await userLogout();
-                      localStorage.removeItem("token");
-                      window.location.href = "/dang-nhap";
+                      await userLogout()
+                      localStorage.removeItem('token')
+                      window.location.href = '/dang-nhap'
                     } catch (error) {
-                      console.error("Logout error:", error);
+                      console.error('Logout error:', error)
                     }
                   }}
                 >
@@ -267,7 +309,7 @@ export function NavigationBar() {
                 <Label htmlFor="account-username">Mã người dùng</Label>
                 <Input
                   id="account-username"
-                  value={user?.btlhcm_nd_mand ?? ""}
+                  value={user?.btlhcm_nd_mand ?? ''}
                   disabled
                 />
               </div>
@@ -275,7 +317,7 @@ export function NavigationBar() {
                 <Label htmlFor="account-username">Mật khẩu</Label>
                 <div className="relative">
                   <Input
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     id="account-password"
                     value={accountPassword}
                     onChange={(e) => setAccountPassword(e.target.value)}
@@ -325,5 +367,5 @@ export function NavigationBar() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
