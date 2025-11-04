@@ -17,10 +17,10 @@ export const CONTACTS_COLUMN_MAP = {
   phong: 'phong',
   ban: 'ban',
   donvi: 'donvi',
-  sdtDs: 'sdtDs',
-  sdtQs: 'sdtQs',
-  sdtDd: 'sdtDd',
-  sdtFax: 'sdtFax',
+  sdtdansu: 'sdtdansu',
+  sdtquansu: 'sdtquansu',
+  sdtdidong: 'sdtdidong',
+  sofax: 'sofax',
 }
 
 // Map header Excel (sau khi normalizeKey) -> key trong code

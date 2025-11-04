@@ -30,7 +30,6 @@ export function normalizeHeader(header) {
 export async function getIdByName(id, table, column, value) {
   if (!value) return null
   const normalizedValue = normalizeString(value)
-  console.log('normalizedValue', normalizedValue)
   const result = await pool.query(
     `SELECT ${id} FROM ${table} WHERE ${column} ILIKE $1 LIMIT 1`,
     [normalizedValue]
