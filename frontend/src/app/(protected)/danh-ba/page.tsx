@@ -82,6 +82,7 @@ function ContactPageContent() {
     btlhcm_lh_sdt_ds: '',
     btlhcm_lh_sdt_qs: '',
     btlhcm_lh_sdt_dd: '',
+    btlhcm_lh_sdt_fax: '',
     btlhcm_lh_hinhanh: '',
     btlhcm_lh_ngaytao: new Date(),
     btlhcm_lh_ngaycapnhat: new Date(),
@@ -205,6 +206,37 @@ function ContactPageContent() {
     setIsEditOpen(true)
   }
 
+  const refreshData = async () => {
+    try {
+      if (wardId.length > 0) {
+        const contacts = await getContactsByWard(selectedUserWard!)
+        setData(contacts)
+      } else {
+        const militaryRegion = searchParams.get('quankhu')
+        const province = searchParams.get('tinhthanh')
+        const ward = searchParams.get('phuongxa')
+
+        if (militaryRegion) {
+          const contacts = await getContactsByMilitaryRegion(
+            parseInt(militaryRegion)
+          )
+          setData(contacts)
+        } else if (province) {
+          const contacts = await getContactsByProvince(parseInt(province))
+          setData(contacts)
+        } else if (ward) {
+          const contacts = await getContactsByWard(parseInt(ward))
+          setData(contacts)
+        } else {
+          const contacts = await getContacts()
+          setData(contacts)
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
+  }
+
   const handleSave = async () => {
     try {
       const response = await updateContact(formData)
@@ -222,17 +254,12 @@ function ContactPageContent() {
           btlhcm_lh_sdt_ds: '',
           btlhcm_lh_sdt_qs: '',
           btlhcm_lh_sdt_dd: '',
+          btlhcm_lh_sdt_fax: '',
           btlhcm_lh_hinhanh: '',
           btlhcm_lh_ngaytao: new Date(),
           btlhcm_lh_ngaycapnhat: new Date(),
         })
-        if (wardId.length > 0) {
-          const contacts = await getContactsByWard(selectedUserWard!)
-          setData(contacts)
-        } else {
-          const newContact = await getContacts()
-          setData(newContact as Contact[])
-        }
+        await refreshData()
       } else {
         console.error('Error saving contact:', response)
       }
@@ -252,17 +279,15 @@ function ContactPageContent() {
       if (response.ok) {
         setIsDeleteOpen(false)
         toast.success('Xóa liên hệ thành công!')
-        if (wardId.length > 0) {
-          const contacts = await getContactsByWard(selectedUserWard!)
-          setData(contacts)
-        } else {
-          const newContact = await getContacts()
-          setData(newContact as Contact[])
-        }
+        await refreshData()
       }
     } catch (error) {
       console.error('Error deleting contact:', error)
     }
+  }
+
+  const handleBulkDelete = async () => {
+    await refreshData()
   }
 
   const handleDataChange = async (newData: Contact[]) => {
@@ -342,6 +367,8 @@ function ContactPageContent() {
           onDataChange={handleDataChange}
           selectedRegion={selectedRegion || undefined}
           userRole={roles.find((role) => role.btlhcm_vt_tenvt)?.btlhcm_vt_tenvt}
+          onBulkDelete={handleBulkDelete}
+          canDelete={canDelete}
         />
       </div>
       {/* Dialog Chỉnh sửa liên hệ */}
@@ -600,6 +627,23 @@ function ContactPageContent() {
                     setFormData({
                       ...formData,
                       btlhcm_lh_sdt_qs: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Số điện thoại fax */}
+              <div className="grid gap-3 w-2/3">
+                <Label htmlFor="phone_fax">Số Fax:</Label>
+                <Input
+                  id="phone_fax"
+                  name="phone_fax"
+                  placeholder="0909090909"
+                  value={formData.btlhcm_lh_sdt_fax}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      btlhcm_lh_sdt_fax: e.target.value,
                     })
                   }
                 />

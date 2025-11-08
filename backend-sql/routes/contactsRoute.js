@@ -7,6 +7,7 @@ import {
   addContact,
   updateContact,
   deleteContact,
+  deleteMultipleContacts,
   importContactsFromExcel,
   exportExcel,
   exportVcard,
@@ -22,6 +23,7 @@ router.get('/province', getContactsByProvince)
 router.get('/ward', getContactsByWard)
 router.post('/', addContact)
 router.put('/:btlhcm_lh_malh', updateContact)
+router.delete('/bulk/delete', deleteMultipleContacts)
 router.delete('/:btlhcm_lh_malh', deleteContact)
 router.post('/import-excel', upload.single('file'), importContactsFromExcel)
 router.get('/export-excel', exportExcel)

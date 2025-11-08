@@ -1,6 +1,7 @@
 import { Ward } from '@/types/wards'
 import { apiUrl } from '@/lib/config'
 import { User } from '@/types/users'
+import { fetchWithAuth } from '@/lib/apiClient'
 
 export const getWards = async (): Promise<Ward[]> => {
   const response = await fetch(apiUrl('/api/wards'))
@@ -15,15 +16,18 @@ export const getWardByUser = async (user: User): Promise<Ward[]> => {
 }
 
 export const addWard = async (ward: Ward): Promise<Response> => {
-  const response = await fetch(apiUrl('/api/wards'), {
+  const response = await fetchWithAuth('/api/wards', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(ward),
   })
   return response
 }
 
 export const updateWard = async (ward: Ward): Promise<Response> => {
-  const response = await fetch(apiUrl(`/api/wards/${ward.btlhcm_px_mapx}`), {
+  const response = await fetchWithAuth(`/api/wards/${ward.btlhcm_px_mapx}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -41,15 +45,12 @@ export const importWardsFromExcel = async (file: File): Promise<Response> => {
   const formData = new FormData()
   formData.append('file', file) // 'file' phải trùng với tên field multer nhận ở backend
 
-  const response = await fetch(apiUrl('/api/wards/import-excel'), {
+  const response = await fetchWithAuth('/api/wards/import-excel', {
     method: 'POST',
     body: formData,
   })
 
-  if (!response.ok) {
-    throw new Error('Nhập phường xã thất bại')
-  }
-  console.log('Nhập phường xã thành công!')
+  // Không throw error để frontend có thể parse JSON response
   return response
 }
 
@@ -71,5 +72,18 @@ export const setWardByUserRole = async (
     throw new Error('Failed to set ward by user role')
   }
   console.log('Cập nhật quyền truy cập thành công!')
+  return response
+}
+
+export const deleteMultipleWards = async (
+  ids: number[]
+): Promise<Response> => {
+  const response = await fetchWithAuth('/api/wards/bulk/delete', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids }),
+  })
   return response
 }

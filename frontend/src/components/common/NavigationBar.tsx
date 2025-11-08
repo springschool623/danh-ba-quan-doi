@@ -255,6 +255,18 @@ export function NavigationBar() {
               </NavigationMenuLink>
             </NavigationMenuItem>
           )}
+
+          {/* Quản lý Logs (chỉ Admin) */}
+          {isPermission && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link href="/quan-ly-logs">Quản lý Logs</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
         </NavigationMenuList>
       </NavigationMenu>
 

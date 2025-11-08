@@ -56,8 +56,12 @@ export default function RolePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getLocations()
-      setData(data)
+      try {
+        const data = await getLocations()
+        setData(data)
+      } catch (error) {
+        console.error('Error fetching locations:', error)
+      }
     }
     fetchData()
   }, [])
@@ -66,6 +70,15 @@ export default function RolePage() {
     console.log('location', location)
     setFormData(location)
     setIsEditOpen(true)
+  }
+
+  const refreshData = async () => {
+    try {
+      const locations = await getLocations()
+      setData(locations)
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
   }
 
   const handleSave = async () => {
@@ -83,8 +96,7 @@ export default function RolePage() {
           btlhcm_dv_ngaytao: new Date(),
           btlhcm_dv_ngaycapnhat: new Date(),
         })
-        const newLocation = await getLocations()
-        setData(newLocation as Location[])
+        await refreshData()
       } else {
         console.error('Error saving location:', response)
       }
@@ -93,13 +105,21 @@ export default function RolePage() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    await refreshData()
+  }
+
   return (
     <>
       {/* <Suspense fallback={<div>Loading...</div>}>
         <PageBreadcrumb label="Quản lý Đơn vị (Quản trị hệ thống)" />
       </Suspense> */}
 
-      <DataTable columns={getLocationColumns(handleEdit)} data={data} />
+      <DataTable
+        columns={getLocationColumns(handleEdit)}
+        data={data}
+        onBulkDelete={handleBulkDelete}
+      />
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>

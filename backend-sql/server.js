@@ -13,6 +13,7 @@ import committeesRoutes from './routes/committeesRoute.js'
 import locationsRoutes from './routes/locationsRoute.js'
 import rolesRoutes from './routes/rolesRoute.js'
 import usersRoutes from './routes/usersRoute.js'
+import logsRoutes from './routes/logsRoute.js'
 import { fileURLToPath } from 'url'
 import setupDatabase from './setup.js'
 import path from 'path'
@@ -49,6 +50,7 @@ app.use('/api/locations', locationsRoutes)
 app.use('/api/roles', rolesRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/permissions', permissionsRoutes)
+app.use('/api/logs', logsRoutes)
 
 app.get('/', (req, res) => {
   res.send(`Server running on port ${process.env.PORT}`)

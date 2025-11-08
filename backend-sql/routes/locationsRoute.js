@@ -4,6 +4,7 @@ import {
   addLocation,
   updateLocation,
   importLocationsFromExcel,
+  deleteMultipleLocations,
 } from '../controllers/locationsController.js'
 import multer from 'multer'
 
@@ -13,6 +14,7 @@ const upload = multer({ dest: 'uploads/' })
 router.get('/', getAllLocations)
 router.post('/', addLocation)
 router.put('/:btlhcm_dv_madv', updateLocation)
+router.delete('/bulk/delete', deleteMultipleLocations)
 router.post('/import-excel', upload.single('file'), importLocationsFromExcel)
 
 export default router

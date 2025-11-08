@@ -21,6 +21,7 @@ const TABLE_ORDER = [
   'nguoidung.sql',
   'vaitroquyenhan.sql',
   'quyentruycap.sql',
+  'log.sql',
 ]
 
 async function createSchema() {

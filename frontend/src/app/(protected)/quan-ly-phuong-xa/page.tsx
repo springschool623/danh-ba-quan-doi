@@ -44,8 +44,12 @@ export default function RolePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getWards()
-      setData(data)
+      try {
+        const data = await getWards()
+        setData(data)
+      } catch (error) {
+        console.error('Error fetching wards:', error)
+      }
     }
     fetchData()
   }, [])
@@ -56,12 +60,21 @@ export default function RolePage() {
     setIsEditOpen(true)
   }
 
+  const refreshData = async () => {
+    try {
+      const wards = await getWards()
+      setData(wards)
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
+  }
+
   const handleSave = async () => {
     try {
       const response = await updateWard(formData)
       if (response.ok) {
         setIsEditOpen(false)
-        toast.success('Cập nhật đơn vị thành công!')
+        toast.success('Cập nhật phường xã thành công!')
         setFormData({
           btlhcm_px_tenpx: '',
           btlhcm_px_mota: '',
@@ -69,8 +82,7 @@ export default function RolePage() {
           btlhcm_px_ngaytao: new Date(),
           btlhcm_px_ngaycapnhat: new Date(),
         })
-        const newLocation = await getWards()
-        setData(newLocation as Ward[])
+        await refreshData()
       } else {
         console.error('Error saving ward:', response)
       }
@@ -79,13 +91,21 @@ export default function RolePage() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    await refreshData()
+  }
+
   return (
     <>
       <Suspense fallback={<div>Loading...</div>}>
         <PageBreadcrumb label="Quản lý Phường/Xã (Quản trị hệ thống)" />
       </Suspense>
 
-      <DataTable columns={getWardColumns(handleEdit)} data={data} />
+      <DataTable
+        columns={getWardColumns(handleEdit)}
+        data={data}
+        onBulkDelete={handleBulkDelete}
+      />
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>

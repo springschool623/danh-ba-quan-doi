@@ -42,6 +42,7 @@ import {
   exportVcard,
   getContacts,
   uploadImage,
+  deleteMultipleContacts,
 } from '@/services/contact.service'
 import {
   Select,
@@ -76,6 +77,8 @@ interface DataTableProps<TData, TValue> {
   onDataChange?: (newData: TData[]) => void
   selectedRegion?: string
   userRole?: string
+  onBulkDelete?: () => void
+  canDelete?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -83,6 +86,8 @@ export function DataTable<TData, TValue>({
   data,
   selectedRegion,
   userRole,
+  onBulkDelete,
+  canDelete,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -107,6 +112,7 @@ export function DataTable<TData, TValue>({
   const [showFilter, setShowFilter] = useState(false)
   const [isImportExportOpen, setIsImportExportOpen] = useState(false)
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const user = useUser()
   const permissions = usePermission(user as User)
   const canAdd = permissions.includes('ADD_CONTACT')
@@ -248,17 +254,112 @@ export function DataTable<TData, TValue>({
     const file = await openFile()
     console.log('Import CSV', file)
     if (file) {
-      const response = await importContactsFromExcel(file)
-      if (response.ok) {
-        console.log('Import CSV thành công')
-        toast.success('Nhập danh bạ thành công!', {
-          duration: 2000,
-          position: 'top-right',
-        })
-      } else {
-        console.log('Import CSV thất bại')
-        toast.error('Nhập danh bạ thất bại!', {
-          duration: 2000,
+      try {
+        const response = await importContactsFromExcel(file)
+        let result
+        try {
+          result = await response.json()
+        } catch (jsonError) {
+          // Nếu không parse được JSON
+          console.error('Lỗi parse JSON:', jsonError)
+          toast.error('Lỗi khi đọc phản hồi từ server!', {
+            duration: 4000,
+            position: 'top-right',
+          })
+          setIsImportExportOpen(false)
+          return
+        }
+
+        if (response.ok && result.success !== false) {
+          console.log('Import CSV thành công', result)
+          const imported = result.imported || 0
+          const updated = result.updated || 0
+
+          let message = 'Nhập danh bạ thành công! '
+          if (imported > 0 && updated > 0) {
+            message += `Đã nhập ${imported} liên hệ mới, cập nhật ${updated} liên hệ.`
+          } else if (imported > 0) {
+            message += `Đã nhập ${imported} liên hệ.`
+          } else if (updated > 0) {
+            message += `Đã cập nhật ${updated} liên hệ.`
+          }
+
+          toast.success(message, {
+            duration: 3000,
+            position: 'top-right',
+          })
+          // Refresh data
+          if (onBulkDelete) {
+            onBulkDelete()
+          }
+        } else {
+          console.log('Import CSV có lỗi', result)
+          const imported = result.imported || 0
+          const updated = result.updated || 0
+
+          // Hiển thị thông báo lỗi tổng quan
+          if (result.message) {
+            toast.error(result.message, {
+              duration: 5000,
+              position: 'top-right',
+            })
+          } else if (imported > 0 || updated > 0) {
+            // Nếu có một số record được import/update thành công
+            let message = ''
+            if (imported > 0 && updated > 0) {
+              message = `Đã nhập ${imported} liên hệ mới, cập nhật ${updated} liên hệ. `
+            } else if (imported > 0) {
+              message = `Đã nhập ${imported} liên hệ. `
+            } else if (updated > 0) {
+              message = `Đã cập nhật ${updated} liên hệ. `
+            }
+            message += `Có một số lỗi xảy ra.`
+            toast.warning(message, {
+              duration: 5000,
+              position: 'top-right',
+            })
+          }
+          // Hiển thị từng lỗi chi tiết
+          if (result.errors && Array.isArray(result.errors)) {
+            // Hiển thị tối đa 5 lỗi đầu tiên để tránh spam toast
+            const errorsToShow = result.errors.slice(0, 5)
+            errorsToShow.forEach((error: string) => {
+              toast.error(error, {
+                duration: 4000,
+                position: 'top-right',
+              })
+            })
+            if (result.errors.length > 5) {
+              toast.error(
+                `... và còn ${
+                  result.errors.length - 5
+                } lỗi khác. Vui lòng kiểm tra lại file.`,
+                {
+                  duration: 4000,
+                  position: 'top-right',
+                }
+              )
+            }
+          } else if (result.error) {
+            toast.error(result.error, {
+              duration: 4000,
+              position: 'top-right',
+            })
+          } else {
+            toast.error('Nhập danh bạ thất bại!', {
+              duration: 2000,
+              position: 'top-right',
+            })
+          }
+          // Refresh data nếu có một số bản ghi được import
+          if (result.imported && result.imported > 0 && onBulkDelete) {
+            onBulkDelete()
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi import CSV:', error)
+        toast.error('Có lỗi xảy ra khi nhập danh bạ!', {
+          duration: 3000,
           position: 'top-right',
         })
       }
@@ -284,6 +385,58 @@ export function DataTable<TData, TValue>({
       console.log('Export VCard thành công')
     } else {
       console.log('Export VCard thất bại')
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    if (selectedRows.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một liên hệ để xóa', {
+        duration: 2000,
+        position: 'top-right',
+      })
+      return
+    }
+
+    const selectedIds = selectedRows.map((row) => {
+      const rowData = row.original as Record<string, unknown>
+      return rowData.btlhcm_lh_malh as number
+    })
+
+    try {
+      setIsLoading(true)
+      const response = await deleteMultipleContacts(selectedIds)
+      const result = await response.json()
+
+      if (response.ok) {
+        toast.success(
+          result.message || `Đã xóa ${selectedIds.length} liên hệ thành công!`,
+          {
+            duration: 2000,
+            position: 'top-right',
+          }
+        )
+        setIsBulkDeleteOpen(false)
+        // Reset selection
+        table.resetRowSelection()
+        // Call callback to refresh data
+        if (onBulkDelete) {
+          onBulkDelete()
+        }
+      } else {
+        toast.error(result.error || 'Có lỗi xảy ra khi xóa liên hệ', {
+          duration: 2000,
+          position: 'top-right',
+        })
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa nhiều liên hệ:', error)
+      toast.error('Có lỗi xảy ra khi xóa liên hệ', {
+        duration: 2000,
+        position: 'top-right',
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -706,6 +859,15 @@ export function DataTable<TData, TValue>({
           )}
         </div>
         <div className="flex items-center gap-4 py-4 ml-auto">
+          {/* Xóa nhiều liên hệ */}
+          {canDelete && table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setIsBulkDeleteOpen(true)}
+            >
+              Xóa ({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          )}
           {/* Thêm liên hệ */}
           {canAdd && (
             <Button variant="edit" onClick={() => setIsAddContactOpen(true)}>
@@ -1241,6 +1403,30 @@ export function DataTable<TData, TValue>({
           <DialogHeader>
             <DialogTitle>Thêm đơn vị</DialogTitle>
           </DialogHeader>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog Xóa nhiều liên hệ */}
+      <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa nhiều liên hệ</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa{' '}
+              {table.getFilteredSelectedRowModel().rows.length} liên hệ đã chọn
+              không? Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="default"
+              onClick={() => setIsBulkDeleteOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button variant="destructive" onClick={handleBulkDelete}>
+              Xóa
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
