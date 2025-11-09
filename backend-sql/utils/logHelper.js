@@ -12,6 +12,8 @@ import jwt from 'jsonwebtoken'
  * @param {string} [logData.recordName] - Tên hiển thị của bản ghi
  * @param {string} [logData.details] - Chi tiết thay đổi
  * @param {number} [logData.count] - Số lượng bản ghi (cho bulk operations)
+ * @param {Error|string} [logData.error] - Lỗi xảy ra (nếu có)
+ * @param {boolean} [logData.isError] - Đánh dấu đây là log lỗi
  */
 export const writeLog = async (logData) => {
   try {
@@ -24,15 +26,134 @@ export const writeLog = async (logData) => {
       recordName = null,
       details = null,
       count = 1,
+      error = null,
+      isError = false,
     } = logData
 
-    // Chỉ ghi log nếu có userId
-    if (!userId) {
+    // Chỉ ghi log nếu có userId (trừ khi là lỗi hệ thống)
+    if (!userId && !isError) {
       console.warn('⚠️ Không có userId, bỏ qua ghi log', { action, table })
       return
     }
 
-    console.log('📝 Đang ghi log:', { userId, role, action, table, recordId, recordName })
+    // Format chi tiết lỗi nếu có
+    let logDetails = details
+    if (isError && error) {
+      let errorMessage = error instanceof Error ? error.message : String(error)
+      
+      // Chỉ lấy dòng đầu tiên (message chính), bỏ phần stack trace
+      errorMessage = errorMessage.split('\n')[0].trim()
+      
+      // Rút gọn các loại lỗi phổ biến
+      if (errorMessage.includes('violates unique constraint')) {
+        // Lấy tên constraint và bảng liên quan
+        const constraintMatch = errorMessage.match(/"([^"]+)"/)
+        if (constraintMatch) {
+          const constraintName = constraintMatch[1]
+          
+          // Loại bỏ "_key" ở cuối nếu có
+          let cleanName = constraintName.replace(/_key$/, '')
+          
+          // Tách tên bảng: phần đầu tiên (trước dấu _ đầu tiên của field pattern)
+          // Ví dụ: "phuongxa_btlhcm_px_tinhthanh_btlhcm_px_tenpx" -> table: "phuongxa"
+          const firstUnderscore = cleanName.indexOf('_')
+          const tableName = firstUnderscore > 0 
+            ? cleanName.substring(0, firstUnderscore) 
+            : cleanName.split('_')[0] || 'bảng'
+          
+          // Tìm các field: tìm pattern "btlhcm_px_*" hoặc "btlhcm_*_*"
+          // Sử dụng regex để tìm tất cả các field names
+          const fieldPatterns = [
+            /btlhcm_[a-z]+_([a-z]+)/g, // Pattern: btlhcm_px_tinhthanh -> tinhthanh
+            /btlhcm_([a-z]+)_([a-z]+)/g, // Pattern: btlhcm_px_tenpx -> tenpx
+          ]
+          
+          const fields = []
+          for (const pattern of fieldPatterns) {
+            let match
+            while ((match = pattern.exec(cleanName)) !== null) {
+              // Lấy phần cuối cùng (tên field thực sự)
+              const fieldName = match[match.length - 1]
+              if (fieldName && !fields.includes(fieldName)) {
+                fields.push(fieldName)
+              }
+            }
+          }
+          
+          // Nếu không tìm được bằng pattern, thử cách đơn giản hơn
+          if (fields.length === 0) {
+            const parts = cleanName.split('_')
+            // Bỏ qua phần đầu (table name) và các prefix "btlhcm", "px"
+            const remaining = parts.filter((part, idx) => {
+              // Bỏ qua table name (phần đầu)
+              if (idx === 0) return false
+              // Bỏ qua các prefix phổ biến
+              if (part === 'btlhcm' || part === 'px' || part === 'px') return false
+              return true
+            })
+            
+            // Lấy các phần không trùng lặp
+            fields.push(...new Set(remaining))
+          }
+          
+          // Rút gọn: chỉ lấy tên field ngắn gọn (loại bỏ prefix dài)
+          const shortFields = fields
+            .filter(f => f && f.length > 0)
+            .map(f => {
+              // Nếu field name có nhiều phần, chỉ lấy phần cuối
+              const parts = f.split('_')
+              return parts.length > 1 ? parts[parts.length - 1] : f
+            })
+            .filter((f, idx, arr) => arr.indexOf(f) === idx) // Loại bỏ trùng lặp
+            .slice(0, 3) // Chỉ lấy tối đa 3 field
+          
+          if (shortFields.length > 0) {
+            errorMessage = `Dữ liệu trùng lặp ở ${tableName} (${shortFields.join(', ')})`
+          } else {
+            errorMessage = `Dữ liệu trùng lặp ở ${tableName}`
+          }
+        } else {
+          errorMessage = 'Dữ liệu trùng lặp'
+        }
+      } else if (errorMessage.includes('violates foreign key constraint')) {
+        errorMessage = 'Dữ liệu không hợp lệ (khóa ngoại)'
+      } else if (errorMessage.includes('violates not-null constraint')) {
+        const match = errorMessage.match(/column "([^"]+)"/)
+        if (match) {
+          errorMessage = `Thiếu thông tin bắt buộc: ${match[1]}`
+        } else {
+          errorMessage = 'Thiếu thông tin bắt buộc'
+        }
+      } else if (errorMessage.includes('syntax error')) {
+        errorMessage = 'Lỗi cú pháp truy vấn'
+      } else if (errorMessage.includes('connection')) {
+        errorMessage = 'Lỗi kết nối database'
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage = 'Quá thời gian chờ'
+      }
+      
+      // Loại bỏ các thông tin không cần thiết (file path, line number, etc.)
+      errorMessage = errorMessage
+        .replace(/at\s+.*/g, '')
+        .replace(/\(.*\)/g, '') // Loại bỏ file path trong ngoặc
+        .replace(/\s+/g, ' ')
+        .trim()
+      
+      // Giới hạn độ dài message
+      if (errorMessage.length > 150) {
+        errorMessage = errorMessage.substring(0, 150) + '...'
+      }
+      
+      logDetails = `LỖI: ${errorMessage}`
+      if (details) {
+        logDetails = `${details}\n${logDetails}`
+      }
+    }
+
+    // Thêm prefix ERROR vào action nếu là lỗi
+    const logAction = isError ? `ERROR_${action}` : action
+
+    console.log(`📝 Đang ghi log ${isError ? 'LỖI' : ''}:`, { userId, role, action: logAction, table, recordId, recordName })
     
     await pool.query(
       `INSERT INTO log (
@@ -45,10 +166,10 @@ export const writeLog = async (logData) => {
         btlhcm_log_chitiet, 
         btlhcm_log_soluong
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [userId, role, action, table, recordId, recordName, details, count]
+      [userId || 'SYSTEM', role || 'SYSTEM', logAction, table, recordId, recordName, logDetails, count]
     )
     
-    console.log('✅ Ghi log thành công')
+    console.log(`✅ Ghi log ${isError ? 'LỖI' : ''} thành công`)
   } catch (error) {
     // Không throw error để không ảnh hưởng đến flow chính
     // Chỉ log ra console để debug

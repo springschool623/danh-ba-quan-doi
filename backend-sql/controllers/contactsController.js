@@ -95,72 +95,8 @@ export const getContactsByWard = async (req, res) => {
 
 // Thêm danh bạ
 export const addContact = async (req, res) => {
-  const {
-    btlhcm_lh_hoten,
-    btlhcm_lh_capbac,
-    btlhcm_lh_chucvu,
-    btlhcm_lh_phong,
-    btlhcm_lh_ban,
-    btlhcm_lh_donvi,
-    btlhcm_lh_sdt_ds,
-    btlhcm_lh_sdt_qs,
-    btlhcm_lh_sdt_fax,
-    btlhcm_lh_sdt_dd,
-  } = req.body
-
-  const result = await pool.query(
-    'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_fax, btlhcm_lh_sdt_dd, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING btlhcm_lh_malh',
-    [
-      btlhcm_lh_hoten,
-      btlhcm_lh_capbac || null,
-      btlhcm_lh_chucvu || null,
-      btlhcm_lh_phong || null,
-      btlhcm_lh_ban || null,
-      btlhcm_lh_donvi || null,
-      btlhcm_lh_sdt_ds || null,
-      btlhcm_lh_sdt_qs || null,
-      btlhcm_lh_sdt_fax || null,
-      btlhcm_lh_sdt_dd || null,
-      new Date(),
-      new Date(),
-    ]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rows.length > 0) {
-    await writeLog({
-      userId,
-      role,
-      action: 'CREATE',
-      table: 'danhbalienhe',
-      recordId: result.rows[0].btlhcm_lh_malh,
-      recordName: btlhcm_lh_hoten,
-      details: `Thêm mới liên hệ: ${btlhcm_lh_hoten}`,
-    })
-  }
-  
-  res.json(result.rows)
-}
-
-// Cập nhật danh bạ
-export const updateContact = async (req, res) => {
-  const { btlhcm_lh_malh } = req.params
-  const {
-    btlhcm_lh_hoten,
-    btlhcm_lh_capbac,
-    btlhcm_lh_chucvu,
-    btlhcm_lh_phong,
-    btlhcm_lh_ban,
-    btlhcm_lh_donvi,
-    btlhcm_lh_sdt_fax,
-    btlhcm_lh_sdt_ds,
-    btlhcm_lh_sdt_qs,
-    btlhcm_lh_sdt_dd,
-  } = req.body
-  const result = await pool.query(
-    'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
-    [
+  try {
+    const {
       btlhcm_lh_hoten,
       btlhcm_lh_capbac,
       btlhcm_lh_chucvu,
@@ -171,58 +107,182 @@ export const updateContact = async (req, res) => {
       btlhcm_lh_sdt_qs,
       btlhcm_lh_sdt_fax,
       btlhcm_lh_sdt_dd,
-      new Date(),
-      btlhcm_lh_malh,
-    ]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rowCount > 0) {
+    } = req.body
+
+    const result = await pool.query(
+      'INSERT INTO danhbalienhe (btlhcm_lh_hoten, btlhcm_lh_capbac, btlhcm_lh_chucvu, btlhcm_lh_phong, btlhcm_lh_ban, btlhcm_lh_donvi, btlhcm_lh_sdt_ds, btlhcm_lh_sdt_qs, btlhcm_lh_sdt_fax, btlhcm_lh_sdt_dd, btlhcm_lh_ngaytao, btlhcm_lh_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING btlhcm_lh_malh',
+      [
+        btlhcm_lh_hoten,
+        btlhcm_lh_capbac || null,
+        btlhcm_lh_chucvu || null,
+        btlhcm_lh_phong || null,
+        btlhcm_lh_ban || null,
+        btlhcm_lh_donvi || null,
+        btlhcm_lh_sdt_ds || null,
+        btlhcm_lh_sdt_qs || null,
+        btlhcm_lh_sdt_fax || null,
+        btlhcm_lh_sdt_dd || null,
+        new Date(),
+        new Date(),
+      ]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rows.length > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'CREATE',
+        table: 'danhbalienhe',
+        recordId: result.rows[0].btlhcm_lh_malh,
+        recordName: btlhcm_lh_hoten,
+        details: `Thêm mới liên hệ: ${btlhcm_lh_hoten}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi thêm liên hệ:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'CREATE',
+      table: 'danhbalienhe',
+      recordId: null,
+      recordName: req.body?.btlhcm_lh_hoten || 'Unknown',
+      details: `Thêm mới liên hệ: ${req.body?.btlhcm_lh_hoten || 'Unknown'}`,
+      error,
+      isError: true,
+    })
+    
+    res.status(500).json({ error: 'Lỗi khi thêm liên hệ: ' + error.message })
+  }
+}
+
+// Cập nhật danh bạ
+export const updateContact = async (req, res) => {
+  try {
+    const { btlhcm_lh_malh } = req.params
+    const {
+      btlhcm_lh_hoten,
+      btlhcm_lh_capbac,
+      btlhcm_lh_chucvu,
+      btlhcm_lh_phong,
+      btlhcm_lh_ban,
+      btlhcm_lh_donvi,
+      btlhcm_lh_sdt_fax,
+      btlhcm_lh_sdt_ds,
+      btlhcm_lh_sdt_qs,
+      btlhcm_lh_sdt_dd,
+    } = req.body
+    const result = await pool.query(
+      'UPDATE danhbalienhe SET btlhcm_lh_hoten = $1, btlhcm_lh_capbac = $2, btlhcm_lh_chucvu = $3, btlhcm_lh_phong = $4, btlhcm_lh_ban = $5, btlhcm_lh_donvi = $6, btlhcm_lh_sdt_ds = $7, btlhcm_lh_sdt_qs = $8, btlhcm_lh_sdt_fax = $9, btlhcm_lh_sdt_dd = $10, btlhcm_lh_ngaycapnhat = $11 WHERE btlhcm_lh_malh = $12',
+      [
+        btlhcm_lh_hoten,
+        btlhcm_lh_capbac,
+        btlhcm_lh_chucvu,
+        btlhcm_lh_phong,
+        btlhcm_lh_ban,
+        btlhcm_lh_donvi,
+        btlhcm_lh_sdt_ds,
+        btlhcm_lh_sdt_qs,
+        btlhcm_lh_sdt_fax,
+        btlhcm_lh_sdt_dd,
+        new Date(),
+        btlhcm_lh_malh,
+      ]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rowCount > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'UPDATE',
+        table: 'danhbalienhe',
+        recordId: parseInt(btlhcm_lh_malh),
+        recordName: btlhcm_lh_hoten,
+        details: `Cập nhật liên hệ: ${btlhcm_lh_hoten}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi cập nhật liên hệ:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'UPDATE',
       table: 'danhbalienhe',
-      recordId: parseInt(btlhcm_lh_malh),
-      recordName: btlhcm_lh_hoten,
-      details: `Cập nhật liên hệ: ${btlhcm_lh_hoten}`,
+      recordId: parseInt(req.params?.btlhcm_lh_malh) || null,
+      recordName: req.body?.btlhcm_lh_hoten || 'Unknown',
+      details: `Cập nhật liên hệ: ${req.body?.btlhcm_lh_hoten || 'Unknown'}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi cập nhật liên hệ: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 // Xoá danh bạ
 export const deleteContact = async (req, res) => {
-  const { btlhcm_lh_malh } = req.params
-  
-  // Lấy thông tin liên hệ trước khi xóa để ghi log
-  const contactResult = await pool.query(
-    'SELECT btlhcm_lh_hoten FROM danhbalienhe WHERE btlhcm_lh_malh = $1',
-    [btlhcm_lh_malh]
-  )
-  
-  const result = await pool.query(
-    'DELETE FROM danhbalienhe WHERE btlhcm_lh_malh = $1',
-    [btlhcm_lh_malh]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rowCount > 0 && contactResult.rows.length > 0) {
+  try {
+    const { btlhcm_lh_malh } = req.params
+    
+    // Lấy thông tin liên hệ trước khi xóa để ghi log
+    const contactResult = await pool.query(
+      'SELECT btlhcm_lh_hoten FROM danhbalienhe WHERE btlhcm_lh_malh = $1',
+      [btlhcm_lh_malh]
+    )
+    
+    const result = await pool.query(
+      'DELETE FROM danhbalienhe WHERE btlhcm_lh_malh = $1',
+      [btlhcm_lh_malh]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rowCount > 0 && contactResult.rows.length > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'DELETE',
+        table: 'danhbalienhe',
+        recordId: parseInt(btlhcm_lh_malh),
+        recordName: contactResult.rows[0].btlhcm_lh_hoten,
+        details: `Xóa liên hệ: ${contactResult.rows[0].btlhcm_lh_hoten}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi xóa liên hệ:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'DELETE',
       table: 'danhbalienhe',
-      recordId: parseInt(btlhcm_lh_malh),
-      recordName: contactResult.rows[0].btlhcm_lh_hoten,
-      details: `Xóa liên hệ: ${contactResult.rows[0].btlhcm_lh_hoten}`,
+      recordId: parseInt(req.params?.btlhcm_lh_malh) || null,
+      recordName: 'Unknown',
+      details: `Xóa liên hệ với ID: ${req.params?.btlhcm_lh_malh}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi xóa liên hệ: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 // Xóa nhiều danh bạ
@@ -270,7 +330,22 @@ export const deleteMultipleContacts = async (req, res) => {
     })
   } catch (error) {
     console.error('Lỗi khi xóa nhiều liên hệ:', error)
-    res.status(500).json({ error: 'Lỗi khi xóa nhiều liên hệ' })
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'DELETE',
+      table: 'danhbalienhe',
+      recordId: null,
+      recordName: `Xóa nhiều liên hệ (${req.body?.ids?.length || 0} ID)`,
+      details: `Xóa nhiều liên hệ: ${JSON.stringify(req.body?.ids || [])}`,
+      error,
+      isError: true,
+    })
+    
+    res.status(500).json({ error: 'Lỗi khi xóa nhiều liên hệ: ' + error.message })
   }
 }
 
@@ -344,7 +419,22 @@ export const exportExcel = async (req, res) => {
     res.send(buffer)
   } catch (err) {
     console.error('❌ Lỗi xuất Excel:', err)
-    res.status(500).json({ message: 'Lỗi xuất Excel' })
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'EXPORT',
+      table: 'danhbalienhe',
+      recordId: null,
+      recordName: `Xuất danh bạ ra Excel`,
+      details: `Xuất danh bạ ra file Excel`,
+      error: err,
+      isError: true,
+    })
+    
+    res.status(500).json({ message: 'Lỗi xuất Excel: ' + err.message })
   }
 }
 
@@ -685,6 +775,21 @@ export const importContactsFromExcel = async (req, res) => {
     })
   } catch (error) {
     console.error(error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'IMPORT',
+      table: 'danhbalienhe',
+      recordId: null,
+      recordName: `Import liên hệ từ Excel`,
+      details: `Import liên hệ từ file: ${req.file?.originalname || 'Unknown'}`,
+      error,
+      isError: true,
+    })
+    
     // Xoá file tạm nếu có lỗi
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path)

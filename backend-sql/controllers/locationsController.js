@@ -13,75 +13,115 @@ export const getAllLocations = async (req, res) => {
 }
 
 export const addLocation = async (req, res) => {
-  console.log('req.body', req.body)
+  try {
+    console.log('req.body', req.body)
 
-  const { btlhcm_dv_tendv, btlhcm_dv_diachi, btlhcm_dv_phuong } = req.body
+    const { btlhcm_dv_tendv, btlhcm_dv_diachi, btlhcm_dv_phuong } = req.body
 
-  const result = await pool.query(
-    `
-    INSERT INTO donvi (btlhcm_dv_tendv, btlhcm_dv_diachi, btlhcm_dv_phuong, btlhcm_dv_tinhthanh, btlhcm_dv_quankhu, btlhcm_dv_ngaytao, btlhcm_dv_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING btlhcm_dv_madv
-  `,
-    [
-      btlhcm_dv_tendv,
-      btlhcm_dv_diachi,
-      btlhcm_dv_phuong,
-      1,
-      7,
-      new Date(),
-      new Date(),
-    ]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rows.length > 0) {
+    const result = await pool.query(
+      `
+      INSERT INTO donvi (btlhcm_dv_tendv, btlhcm_dv_diachi, btlhcm_dv_phuong, btlhcm_dv_tinhthanh, btlhcm_dv_quankhu, btlhcm_dv_ngaytao, btlhcm_dv_ngaycapnhat) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING btlhcm_dv_madv
+    `,
+      [
+        btlhcm_dv_tendv,
+        btlhcm_dv_diachi,
+        btlhcm_dv_phuong,
+        1,
+        7,
+        new Date(),
+        new Date(),
+      ]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rows.length > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'CREATE',
+        table: 'donvi',
+        recordId: result.rows[0].btlhcm_dv_madv,
+        recordName: btlhcm_dv_tendv,
+        details: `Thêm mới đơn vị: ${btlhcm_dv_tendv}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi thêm đơn vị:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'CREATE',
       table: 'donvi',
-      recordId: result.rows[0].btlhcm_dv_madv,
-      recordName: btlhcm_dv_tendv,
-      details: `Thêm mới đơn vị: ${btlhcm_dv_tendv}`,
+      recordId: null,
+      recordName: req.body?.btlhcm_dv_tendv || 'Unknown',
+      details: `Thêm mới đơn vị: ${req.body?.btlhcm_dv_tendv || 'Unknown'}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi thêm đơn vị: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 export const updateLocation = async (req, res) => {
-  const {
-    btlhcm_dv_madv,
-    btlhcm_dv_tendv,
-    btlhcm_dv_diachi,
-    btlhcm_dv_phuong,
-  } = req.body
-  const result = await pool.query(
-    `UPDATE donvi SET btlhcm_dv_tendv = $1, btlhcm_dv_diachi = $2, btlhcm_dv_phuong = $3, btlhcm_dv_ngaycapnhat = $4 WHERE btlhcm_dv_madv = $5`,
-    [
+  try {
+    const {
+      btlhcm_dv_madv,
       btlhcm_dv_tendv,
       btlhcm_dv_diachi,
       btlhcm_dv_phuong,
-      new Date(),
-      btlhcm_dv_madv,
-    ]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rowCount > 0) {
+    } = req.body
+    const result = await pool.query(
+      `UPDATE donvi SET btlhcm_dv_tendv = $1, btlhcm_dv_diachi = $2, btlhcm_dv_phuong = $3, btlhcm_dv_ngaycapnhat = $4 WHERE btlhcm_dv_madv = $5`,
+      [
+        btlhcm_dv_tendv,
+        btlhcm_dv_diachi,
+        btlhcm_dv_phuong,
+        new Date(),
+        btlhcm_dv_madv,
+      ]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rowCount > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'UPDATE',
+        table: 'donvi',
+        recordId: btlhcm_dv_madv,
+        recordName: btlhcm_dv_tendv,
+        details: `Cập nhật đơn vị: ${btlhcm_dv_tendv}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi cập nhật đơn vị:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'UPDATE',
       table: 'donvi',
-      recordId: btlhcm_dv_madv,
-      recordName: btlhcm_dv_tendv,
-      details: `Cập nhật đơn vị: ${btlhcm_dv_tendv}`,
+      recordId: req.body?.btlhcm_dv_madv || null,
+      recordName: req.body?.btlhcm_dv_tendv || 'Unknown',
+      details: `Cập nhật đơn vị: ${req.body?.btlhcm_dv_tendv || 'Unknown'}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi cập nhật đơn vị: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 // Xóa nhiều đơn vị
@@ -129,7 +169,22 @@ export const deleteMultipleLocations = async (req, res) => {
     })
   } catch (error) {
     console.error('Lỗi khi xóa nhiều đơn vị:', error)
-    res.status(500).json({ error: 'Lỗi khi xóa nhiều đơn vị' })
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'DELETE',
+      table: 'donvi',
+      recordId: null,
+      recordName: `Xóa nhiều đơn vị (${req.body?.ids?.length || 0} ID)`,
+      details: `Xóa nhiều đơn vị: ${JSON.stringify(req.body?.ids || [])}`,
+      error,
+      isError: true,
+    })
+    
+    res.status(500).json({ error: 'Lỗi khi xóa nhiều đơn vị: ' + error.message })
   }
 }
 
@@ -345,6 +400,21 @@ export const importLocationsFromExcel = async (req, res) => {
     })
   } catch (error) {
     console.error(error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'IMPORT',
+      table: 'donvi',
+      recordId: null,
+      recordName: `Import đơn vị từ Excel`,
+      details: `Import đơn vị từ file: ${req.file?.originalname || 'Unknown'}`,
+      error,
+      isError: true,
+    })
+    
     // Xoá file tạm nếu có lỗi
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path)

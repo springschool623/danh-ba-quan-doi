@@ -4,7 +4,7 @@ export interface Log {
   btlhcm_log_id: number
   btlhcm_log_mand: string
   btlhcm_log_vaitro: string
-  btlhcm_log_hanhdong: 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT' | 'READ'
+  btlhcm_log_hanhdong: 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT' | 'READ' | 'ERROR_CREATE' | 'ERROR_UPDATE' | 'ERROR_DELETE' | 'ERROR_IMPORT' | 'ERROR_EXPORT' | 'ERROR_READ'
   btlhcm_log_bang: string
   btlhcm_log_maid: number | null
   btlhcm_log_tenbang: string | null

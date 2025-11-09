@@ -67,27 +67,47 @@ export const setWardByUserRole = async (req, res) => {
 }
 
 export const addWard = async (req, res) => {
-  const { btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh } = req.body
-  const result = await pool.query(
-    `INSERT INTO phuongxa (btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh) VALUES ($1, $2, $3) RETURNING btlhcm_px_mapx`,
-    [btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rows.length > 0) {
+  try {
+    const { btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh } = req.body
+    const result = await pool.query(
+      `INSERT INTO phuongxa (btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh) VALUES ($1, $2, $3) RETURNING btlhcm_px_mapx`,
+      [btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rows.length > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'CREATE',
+        table: 'phuongxa',
+        recordId: result.rows[0].btlhcm_px_mapx,
+        recordName: btlhcm_px_tenpx,
+        details: `Thêm mới phường xã: ${btlhcm_px_tenpx}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi thêm phường xã:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'CREATE',
       table: 'phuongxa',
-      recordId: result.rows[0].btlhcm_px_mapx,
-      recordName: btlhcm_px_tenpx,
-      details: `Thêm mới phường xã: ${btlhcm_px_tenpx}`,
+      recordId: null,
+      recordName: req.body?.btlhcm_px_tenpx || 'Unknown',
+      details: `Thêm mới phường xã: ${req.body?.btlhcm_px_tenpx || 'Unknown'}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi thêm phường xã: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 //Nhập địa chỉ từ file Excel
@@ -268,6 +288,21 @@ export const importWardsFromExcel = async (req, res) => {
     })
   } catch (error) {
     console.error(error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'IMPORT',
+      table: 'phuongxa',
+      recordId: null,
+      recordName: `Import phường xã từ Excel`,
+      details: `Import phường xã từ file: ${req.file?.originalname || 'Unknown'}`,
+      error,
+      isError: true,
+    })
+    
     // Xoá file tạm nếu có lỗi
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path)
@@ -277,39 +312,59 @@ export const importWardsFromExcel = async (req, res) => {
 }
 
 export const updateWard = async (req, res) => {
-  console.log('req.body', req.body)
-  const {
-    btlhcm_px_mapx,
-    btlhcm_px_tenpx,
-    btlhcm_px_mota,
-    btlhcm_px_tinhthanh,
-  } = req.body
+  try {
+    console.log('req.body', req.body)
+    const {
+      btlhcm_px_mapx,
+      btlhcm_px_tenpx,
+      btlhcm_px_mota,
+      btlhcm_px_tinhthanh,
+    } = req.body
 
-  console.log('btlhcm_px_mapx', btlhcm_px_mapx)
-  console.log('btlhcm_px_tenpx', btlhcm_px_tenpx)
-  console.log('btlhcm_px_mota', btlhcm_px_mota)
-  console.log('btlhcm_px_tinhthanh', btlhcm_px_tinhthanh)
+    console.log('btlhcm_px_mapx', btlhcm_px_mapx)
+    console.log('btlhcm_px_tenpx', btlhcm_px_tenpx)
+    console.log('btlhcm_px_mota', btlhcm_px_mota)
+    console.log('btlhcm_px_tinhthanh', btlhcm_px_tinhthanh)
 
-  const result = await pool.query(
-    `UPDATE phuongxa SET btlhcm_px_tenpx = $1, btlhcm_px_mota = $2, btlhcm_px_tinhthanh = $3 WHERE btlhcm_px_mapx = $4`,
-    [btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh, btlhcm_px_mapx]
-  )
-  
-  // Ghi log
-  const { userId, role } = getUserFromRequest(req)
-  if (userId && result.rowCount > 0) {
+    const result = await pool.query(
+      `UPDATE phuongxa SET btlhcm_px_tenpx = $1, btlhcm_px_mota = $2, btlhcm_px_tinhthanh = $3 WHERE btlhcm_px_mapx = $4`,
+      [btlhcm_px_tenpx, btlhcm_px_mota, btlhcm_px_tinhthanh, btlhcm_px_mapx]
+    )
+    
+    // Ghi log
+    const { userId, role } = getUserFromRequest(req)
+    if (userId && result.rowCount > 0) {
+      await writeLog({
+        userId,
+        role,
+        action: 'UPDATE',
+        table: 'phuongxa',
+        recordId: btlhcm_px_mapx,
+        recordName: btlhcm_px_tenpx,
+        details: `Cập nhật phường xã: ${btlhcm_px_tenpx}`,
+      })
+    }
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Lỗi khi cập nhật phường xã:', error)
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
     await writeLog({
       userId,
       role,
       action: 'UPDATE',
       table: 'phuongxa',
-      recordId: btlhcm_px_mapx,
-      recordName: btlhcm_px_tenpx,
-      details: `Cập nhật phường xã: ${btlhcm_px_tenpx}`,
+      recordId: req.body?.btlhcm_px_mapx || null,
+      recordName: req.body?.btlhcm_px_tenpx || 'Unknown',
+      details: `Cập nhật phường xã: ${req.body?.btlhcm_px_tenpx || 'Unknown'}`,
+      error,
+      isError: true,
     })
+    
+    res.status(500).json({ error: 'Lỗi khi cập nhật phường xã: ' + error.message })
   }
-  
-  res.json(result.rows)
 }
 
 // Xóa nhiều phường xã
@@ -357,6 +412,21 @@ export const deleteMultipleWards = async (req, res) => {
     })
   } catch (error) {
     console.error('Lỗi khi xóa nhiều phường xã:', error)
-    res.status(500).json({ error: 'Lỗi khi xóa nhiều phường xã' })
+    
+    // Ghi log lỗi
+    const { userId, role } = getUserFromRequest(req)
+    await writeLog({
+      userId,
+      role,
+      action: 'DELETE',
+      table: 'phuongxa',
+      recordId: null,
+      recordName: `Xóa nhiều phường xã (${req.body?.ids?.length || 0} ID)`,
+      details: `Xóa nhiều phường xã: ${JSON.stringify(req.body?.ids || [])}`,
+      error,
+      isError: true,
+    })
+    
+    res.status(500).json({ error: 'Lỗi khi xóa nhiều phường xã: ' + error.message })
   }
 }

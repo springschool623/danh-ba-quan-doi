@@ -134,6 +134,11 @@ export default function LogsPage() {
                 <SelectItem value="DELETE">DELETE</SelectItem>
                 <SelectItem value="IMPORT">IMPORT</SelectItem>
                 <SelectItem value="EXPORT">EXPORT</SelectItem>
+                <SelectItem value="ERROR_CREATE">❌ ERROR: CREATE</SelectItem>
+                <SelectItem value="ERROR_UPDATE">❌ ERROR: UPDATE</SelectItem>
+                <SelectItem value="ERROR_DELETE">❌ ERROR: DELETE</SelectItem>
+                <SelectItem value="ERROR_IMPORT">❌ ERROR: IMPORT</SelectItem>
+                <SelectItem value="ERROR_EXPORT">❌ ERROR: EXPORT</SelectItem>
                 {/* <SelectItem value="READ">READ</SelectItem> */}
               </SelectContent>
             </Select>

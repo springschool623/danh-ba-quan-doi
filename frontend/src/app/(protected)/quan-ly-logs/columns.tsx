@@ -21,6 +21,9 @@ export const getLogColumns = (): ColumnDef<Log>[] => {
       header: 'Hành động',
       cell: ({ row }) => {
         const action = row.getValue('btlhcm_log_hanhdong') as string
+        const isError = action.startsWith('ERROR_')
+        const baseAction = isError ? action.replace('ERROR_', '') : action
+
         const actionColors: Record<string, string> = {
           CREATE: 'bg-green-100 text-green-800',
           UPDATE: 'bg-blue-100 text-blue-800',
@@ -29,13 +32,19 @@ export const getLogColumns = (): ColumnDef<Log>[] => {
           EXPORT: 'bg-yellow-100 text-yellow-800',
           READ: 'bg-gray-100 text-gray-800',
         }
+
+        const errorColors = 'bg-red-600 text-white border-2 border-red-800'
+        const normalColor =
+          actionColors[baseAction] || 'bg-gray-100 text-gray-800'
+
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-              actionColors[action] || 'bg-gray-100 text-gray-800'
+              isError ? errorColors : normalColor
             }`}
+            title={isError ? 'Thao tác thất bại' : 'Thao tác thành công'}
           >
-            {action}
+            {isError ? '❌ ERROR' : baseAction}
           </span>
         )
       },
@@ -62,9 +71,38 @@ export const getLogColumns = (): ColumnDef<Log>[] => {
       header: 'Chi tiết',
       cell: ({ row }) => {
         const details = row.getValue('btlhcm_log_chitiet') as string
+        const action = row.getValue('btlhcm_log_hanhdong') as string
+        const isError = action.startsWith('ERROR_')
+
+        // Kiểm tra nếu có thông tin lỗi
+        const hasError = details?.includes('LỖI:')
+
+        if (!details) {
+          return <div className="max-w-md">-</div>
+        }
+
+        // Nếu là lỗi, hiển thị với màu đỏ và format đặc biệt
+        if (isError || hasError) {
+          const errorParts = details.split('LỖI:')
+          const normalText = errorParts[0]?.trim() || ''
+          let errorText = errorParts[1]?.trim() || details
+
+          // Chỉ lấy dòng đầu tiên của error message để ngắn gọn
+          errorText = errorText.split('\n')[0].trim()
+
+          return (
+            <div className="max-w-md" title={details}>
+              {normalText && <div className="text-sm mb-1">{normalText}</div>}
+              <div className="w-full text-sm font-semibold text-red-600 bg-red-50 px-2 py-2 rounded border border-red-200 break-words">
+                ⚠️ {errorText}
+              </div>
+            </div>
+          )
+        }
+
         return (
-          <div className="max-w-md truncate" title={details || ''}>
-            {details || '-'}
+          <div className="max-w-md truncate" title={details}>
+            {details}
           </div>
         )
       },
