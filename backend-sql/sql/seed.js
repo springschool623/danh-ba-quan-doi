@@ -10,7 +10,7 @@ const SEEDS_DIR = path.join(__dirname, 'seeds')
 const SEED_ORDER = [
   'quankhu.seed.sql',
   'tinhthanh.seed.sql',
-  'phuongxa.seed.sql',
+  // 'phuongxa.seed.sql',
   'capbac.seed.sql',
   'chucvu.seed.sql',
   'phongban.seed.sql',
